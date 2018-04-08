@@ -1,0 +1,10 @@
+block size:
+30 pixels
+
+board size:
+38x21 blocks
+1140x630 pixels
+
+window size (including yellow border and text and numbers at the bottom):
+40x24 blocks
+1200x720 pixels
