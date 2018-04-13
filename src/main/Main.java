@@ -30,7 +30,7 @@ public class Main
 	    frmMain.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	    frmMain.setTitle("Beast");
 	    
-
+	    /*
 	    
 	    ArrayList<Integer> al2 = new ArrayList<Integer>();
 	    //add method for integer ArrayList
@@ -38,7 +38,7 @@ public class Main
 	    al2.add(34);
 	    al2.add(99);
 	    al2.add(99);
-	    al2.add(78);
+	    al2.add(78);*/
 	    
 	    
 	    while (true) {
