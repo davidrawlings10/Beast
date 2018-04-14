@@ -27,23 +27,9 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     int enemyX = 240, enemyY = 240;
     
     Random rand = new Random();
-    int NUM_BLOCKS = 25;
-//    int[] blockX = {rand.nextInt(38) * cellSize, 60, 90, 150, 180};
-//    int[] blockY = {rand.nextInt(20) * cellSize, 360, 90, 150, 180};
+    int NUM_BLOCKS = 233;
     int[] blockX = new int[NUM_BLOCKS];
     int[] blockY = new int[NUM_BLOCKS];
-    //blockX[0] = 8;
-    
-    //int[] blockY = new int[100];
-    
-    //for (int i = 0; i < NUM_BLOCKS; ++i) {
-    //	blockY[i] = rand.nextInt(38) * cellSize;
-    //}
-   
-    
-//    for (int i = 0; i < numBlocks; ++i) {
-//    	blockY[i] = rand.nextInt(38) * cellSize;
-//    }
     
     public enum Direction {
     	UP, DOWN, LEFT, RIGHT
@@ -62,15 +48,13 @@ public class Beast extends JPanel implements ActionListener, KeyListener
         boardHeight = boardHeight_;
         windowWidth = windowWidth_;
         windowHeight = windowHeight_;
-        //System.out.println("cellSize:"+cellSize+"boardWidth:"+boardWidth+"boardHeight:"+boardHeight+"windowWidth:"+windowWidth+"windowHeight:"+windowHeight);
         
         for (int i = 0; i < NUM_BLOCKS; ++i) {
-        	blockX[i] = rand.nextInt(boardWidth_ - 2) * cellSize + cellSize;
+        	blockX[i] = rand.nextInt(boardWidth_) * cellSize + cellSize;
         }
         
         for (int i = 0; i < NUM_BLOCKS; ++i) {
-        	//blockX[i] = rand.nextInt() * cellSize;
-        	blockY[i] = rand.nextInt(boardHeight_ - 2) * cellSize + cellSize;
+        	blockY[i] = rand.nextInt(boardHeight_ - 1) * cellSize + cellSize;
         }
     }
     
