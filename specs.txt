@@ -14,5 +14,3 @@ Upon first count on 4/13/18 233 green blocks at 0:03 on the youtube.
 Player position seemed to be random first time but where you ended up from the last level after that
 
 Display: Beasts, Eggs, Level, Time, Lives, Score
-
-Lives start at 5

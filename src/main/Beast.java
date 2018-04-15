@@ -1,41 +1,52 @@
 package main;
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.geom.*;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.List;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.util.ArrayList;
 import java.util.Random;
 
+import javax.swing.JPanel;
+import javax.swing.Timer;
+
 // youtube video
-// https://www.youtube.com/watch?v=gffS40Djmxc
+// https://www.youtube.com/watch?v=gffS40Djmxcavaliable_positionsX
 @SuppressWarnings("serial")
 public class Beast extends JPanel implements ActionListener, KeyListener
 {
+    public enum Direction {
+    	UP, DOWN, LEFT, RIGHT
+    }
+	
     Timer shapeTimer = new Timer(5, this);
+    Random rand = new Random();
 
-    int cellSize;
+    int CELLSIZE;
     int boardWidth;
     int boardHeight;
     int windowWidth;
     int windowHeight;
-    
     long time;
     
     Direction direction = Direction.UP;
-
     int playerX = 120, playerY = 120;
     int enemyX = 240, enemyY = 240;
     
-    Random rand = new Random();
+    int[][] avaliable_positions = new int[760][2];
+    
     int NUM_BLOCKS = 233;
     int[] blockX = new int[NUM_BLOCKS];
     int[] blockY = new int[NUM_BLOCKS];
     
-    public enum Direction {
-    	UP, DOWN, LEFT, RIGHT
-    }
+    int active_concretes = 10;
+    int[] concreteX = new int[20];
+    int[] concreteY = new int[20];
 
-    public Beast(int cellSize_, int boardWidth_, int boardHeight_, int windowWidth_, int windowHeight_)   // Constructor is passed the size of the parent frame
+    public Beast(int CELLSIZE_, int boardWidth_, int boardHeight_, int windowWidth_, int windowHeight_)   // Constructor is passed the size of the parent frame
     {
         shapeTimer.start();
 
@@ -43,25 +54,37 @@ public class Beast extends JPanel implements ActionListener, KeyListener
         setFocusable(true);
         setFocusTraversalKeysEnabled(false);
         
-        cellSize = cellSize_;
+        CELLSIZE = CELLSIZE_;
         boardWidth = boardWidth_;
         boardHeight = boardHeight_;
         windowWidth = windowWidth_;
         windowHeight = windowHeight_;
-        
-        for (int i = 0; i < NUM_BLOCKS; ++i) {
-        	blockX[i] = rand.nextInt(boardWidth_) * cellSize + cellSize;
+                
+        int index = 0;
+        for (int i = 0; i < boardWidth; ++i) {
+        	for (int j = 0; j < boardHeight - 1; ++j) {
+        		System.out.println("index: " + index + ", i: " + i + ", j: " + j + ", posx: " + (i * CELLSIZE + CELLSIZE) + ", poxy: " + (j * CELLSIZE + CELLSIZE));
+        		avaliable_positions[index][0] = i * CELLSIZE + CELLSIZE;
+        		avaliable_positions[index][1] = j * CELLSIZE + CELLSIZE;
+        		index++;        		
+        	}
         }
         
         for (int i = 0; i < NUM_BLOCKS; ++i) {
-        	blockY[i] = rand.nextInt(boardHeight_ - 1) * cellSize + cellSize;
+        	blockX[i] = rand.nextInt(boardWidth_) * CELLSIZE + CELLSIZE;
+        	blockY[i] = rand.nextInt(boardHeight_ - 1) * CELLSIZE + CELLSIZE;
+        }
+        
+        for (int i = 0; i < active_concretes; ++i) {
+        	concreteX[i] = rand.nextInt(boardWidth_) * CELLSIZE + CELLSIZE;
+        	concreteY[i] = rand.nextInt(boardHeight_ - 1) * CELLSIZE + CELLSIZE;
         }
     }
     
     public void update() {
     	if (time + 1000 < System.currentTimeMillis()) {
         	time = System.currentTimeMillis();
-        	enemyX += cellSize;
+        	enemyX += CELLSIZE;
         	repaint();
     	}
     	if (playerX == enemyX && playerY == enemyY) {
@@ -82,27 +105,34 @@ public class Beast extends JPanel implements ActionListener, KeyListener
         
         // draw border
         graphics.setColor(Color.YELLOW);
-        graphics.fillRect(0, 0, windowWidth, cellSize); // top
-        graphics.fillRect(0, 0, cellSize, windowHeight - cellSize); // left
-        graphics.fillRect(windowWidth - cellSize, 0, windowWidth, windowHeight - cellSize); // right
-        graphics.fillRect(0, windowHeight - cellSize * 2, windowWidth, cellSize); // bottom
+        graphics.fillRect(0, 0, windowWidth, CELLSIZE); // top
+        graphics.fillRect(0, 0, CELLSIZE, windowHeight - CELLSIZE); // left
+        graphics.fillRect(windowWidth - CELLSIZE, 0, windowWidth, windowHeight - CELLSIZE); // right
+        graphics.fillRect(0, windowHeight - CELLSIZE * 2, windowWidth, CELLSIZE); // bottom
         
-        // draw player
+        /*// draw player
         graphics.setColor(Color.decode("#00FFFF"));
-        graphics.fillRect(playerX, playerY, cellSize, cellSize);
+        graphics.fillRect(playerX, playerY, CELLSIZE, CELLSIZE);
         
-        // draw enemies
+        // draw enemies       
         graphics.setColor(Color.decode("#FF0000"));
-        graphics.fillRect(enemyX, enemyY, cellSize, cellSize);
+        graphics.fillRect(enemyX, enemyY, CELLSIZE, CELLSIZE);
         
         // draw concretes
-        graphics.setColor(Color.decode("#FFFF00"));
-        graphics.fillRect(210, 210, cellSize, cellSize);
+    	graphics.setColor(Color.decode("#FFFF00"));
+        for (int i = 0; i < active_concretes; ++i) {
+        	graphics.fillRect(concreteX[i], concreteY[i], CELLSIZE, CELLSIZE);
+        }
         
         // draw blocks
         graphics.setColor(Color.decode("#009900"));
         for (int i = 0; i < NUM_BLOCKS; ++i) {
-        	graphics.fillRect(blockX[i], blockY[i], cellSize, cellSize);
+        	graphics.fillRect(blockX[i], blockY[i], CELLSIZE, CELLSIZE);
+        }*/
+        
+        graphics.setColor(Color.decode("#009900"));
+        for (int i = 0; i < 760; ++i) {
+        	graphics.fillRect(avaliable_positions[i][0], avaliable_positions[i][1], CELLSIZE, CELLSIZE);
         }
         
         // draw text
@@ -122,25 +152,25 @@ public class Beast extends JPanel implements ActionListener, KeyListener
 
         if (keyCode == KeyEvent.VK_UP) 
         {
-            playerY += -cellSize;
+            playerY += -CELLSIZE;
             direction = Direction.UP;
         }
 
         if (keyCode == KeyEvent.VK_DOWN)
         {
-            playerY += cellSize;
+            playerY += CELLSIZE;
             direction = Direction.DOWN;
         }
 
         if (keyCode == KeyEvent.VK_RIGHT)
         {
-            playerX += cellSize;
+            playerX += CELLSIZE;
             direction = Direction.RIGHT;
         }
 
         if (keyCode == KeyEvent.VK_LEFT) 
         {
-            playerX -= cellSize;
+            playerX -= CELLSIZE;
             direction = Direction.LEFT;
         }
         checkForCollisions(playerX, playerY, -1);
@@ -151,16 +181,16 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     		//System.out.println(i);
     		if (blockX[i] == x && blockY[i] == y && i != id) {
     			if (direction == Direction.UP) {
-    				blockY[i] -= cellSize;
+    				blockY[i] -= CELLSIZE;
     			}
     			if (direction == Direction.DOWN) {
-    				blockY[i] += cellSize;
+    				blockY[i] += CELLSIZE;
     			}
     			if (direction == Direction.LEFT) {
-    				blockX[i] -= cellSize;
+    				blockX[i] -= CELLSIZE;
     			}
     			if (direction == Direction.RIGHT) {
-    				blockX[i] += cellSize;
+    				blockX[i] += CELLSIZE;
     			}
     			checkForCollisions(blockX[i], blockY[i], i);
     		}
