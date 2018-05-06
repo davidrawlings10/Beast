@@ -36,7 +36,10 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     int playerX = 120, playerY = 120;
     int enemyX = 240, enemyY = 240;
     
-    int[][] avaliable_positions = new int[760][2];
+    int numAvailablePositions = 760; // = boardWidth * (boardHeight - 1); (these vars were not populated yet of course)
+    int[][] avaliable_positions_o = new int[760][2];
+    
+    ArrayList<ArrayList<Integer>> avaliable_positions = new ArrayList<ArrayList<Integer>>();
     
     int NUM_BLOCKS = 233;
     int[] blockX = new int[NUM_BLOCKS];
@@ -63,21 +66,52 @@ public class Beast extends JPanel implements ActionListener, KeyListener
         int index = 0;
         for (int i = 0; i < boardWidth; ++i) {
         	for (int j = 0; j < boardHeight - 1; ++j) {
-        		System.out.println("index: " + index + ", i: " + i + ", j: " + j + ", posx: " + (i * CELLSIZE + CELLSIZE) + ", poxy: " + (j * CELLSIZE + CELLSIZE));
-        		avaliable_positions[index][0] = i * CELLSIZE + CELLSIZE;
-        		avaliable_positions[index][1] = j * CELLSIZE + CELLSIZE;
-        		index++;        		
+        		//System.out.println("index: " + index + ", i: " + i + ", j: " + j + ", posx: " + (i * CELLSIZE + CELLSIZE) + ", poxy: " + (j * CELLSIZE + CELLSIZE));
+        		//avaliable_positions_o[index][0] = i * CELLSIZE + CELLSIZE;
+        		//avaliable_positions_o[index][1] = j * CELLSIZE + CELLSIZE;
+        		
+        		ArrayList<Integer> pos = new ArrayList<Integer>();
+        		pos.add(i * CELLSIZE + CELLSIZE);
+        		pos.add(j * CELLSIZE + CELLSIZE);
+        		avaliable_positions.add(pos);
+        		
+        		index++;
         	}
+        }
+        if (index != numAvailablePositions) {
+        	System.out.println("WARNING: assignment index did not match numAvailablePositions");
+        	System.out.println("index: "+index);
+        	System.out.println("numAvailablePositions: "+numAvailablePositions);
         }
         
         for (int i = 0; i < NUM_BLOCKS; ++i) {
-        	blockX[i] = rand.nextInt(boardWidth_) * CELLSIZE + CELLSIZE;
-        	blockY[i] = rand.nextInt(boardHeight_ - 1) * CELLSIZE + CELLSIZE;
+        	//blockX[i] = rand.nextInt(boardWidth_) * CELLSIZE + CELLSIZE;
+        	//blockY[i] = rand.nextInt(boardHeight_ - 1) * CELLSIZE + CELLSIZE;        	
+        	//blockX[i] = avaliable_positions_o[randomIndex][0];
+        	//blockY[i] = avaliable_positions_o[randomIndex][1];
+        	
+        	int randomIndex = rand.nextInt(numAvailablePositions);        	
+        	blockX[i] = avaliable_positions.get(randomIndex).get(0);
+        	blockY[i] = avaliable_positions.get(randomIndex).get(1);
+        	avaliable_positions.remove(randomIndex);
+        	numAvailablePositions--;
+        	
+        	///System.out.println("numAvailablePositions:" + numAvailablePositions + ", randomIndex:" + randomIndex + 
+        	//		", x:" + avaliable_positions.get(randomIndex).get(0) + ", y:" + avaliable_positions.get(randomIndex).get(1));
         }
         
         for (int i = 0; i < active_concretes; ++i) {
-        	concreteX[i] = rand.nextInt(boardWidth_) * CELLSIZE + CELLSIZE;
-        	concreteY[i] = rand.nextInt(boardHeight_ - 1) * CELLSIZE + CELLSIZE;
+        	//concreteX[i] = rand.nextInt(boardWidth_) * CELLSIZE + CELLSIZE;
+        	//concreteY[i] = rand.nextInt(boardHeight_ - 1) * CELLSIZE + CELLSIZE;
+        	
+        	//concreteX[i] = avaliable_positions_o[rand.nextInt(numAvailablePositions)][0];
+        	//concreteY[i] = avaliable_positions_o[rand.nextInt(numAvailablePositions)][1];
+
+        	int randomIndex = rand.nextInt(numAvailablePositions);
+        	concreteX[i] = avaliable_positions.get(randomIndex).get(0);
+        	concreteY[i] = avaliable_positions.get(randomIndex).get(1);
+        	avaliable_positions.remove(randomIndex);
+        	numAvailablePositions--;
         }
     }
     
@@ -110,7 +144,7 @@ public class Beast extends JPanel implements ActionListener, KeyListener
         graphics.fillRect(windowWidth - CELLSIZE, 0, windowWidth, windowHeight - CELLSIZE); // right
         graphics.fillRect(0, windowHeight - CELLSIZE * 2, windowWidth, CELLSIZE); // bottom
         
-        /*// draw player
+        // draw player
         graphics.setColor(Color.decode("#00FFFF"));
         graphics.fillRect(playerX, playerY, CELLSIZE, CELLSIZE);
         
@@ -128,11 +162,12 @@ public class Beast extends JPanel implements ActionListener, KeyListener
         graphics.setColor(Color.decode("#009900"));
         for (int i = 0; i < NUM_BLOCKS; ++i) {
         	graphics.fillRect(blockX[i], blockY[i], CELLSIZE, CELLSIZE);
-        }*/
+        }
+        
         
         graphics.setColor(Color.decode("#009900"));
-        for (int i = 0; i < 760; ++i) {
-        	graphics.fillRect(avaliable_positions[i][0], avaliable_positions[i][1], CELLSIZE, CELLSIZE);
+        for (int i = 0; i < numAvailablePositions; ++i) {
+        	//graphics.fillRect(avaliable_positions[i][0], avaliable_positions[i][1], CELLSIZE, CELLSIZE);
         }
         
         // draw text
