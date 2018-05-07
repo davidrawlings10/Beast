@@ -33,21 +33,32 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     long time;
     
     Direction direction = Direction.UP;
-    int playerX = 120, playerY = 120;
-    int enemyX = 240, enemyY = 240;
     
     int numAvailablePositions = 760; // = boardWidth * (boardHeight - 1); (these vars were not populated yet of course)
-    int[][] avaliable_positions_o = new int[760][2];
-    
+    //int[][] avaliable_positions_o = new int[760][2];    
     ArrayList<ArrayList<Integer>> avaliable_positions = new ArrayList<ArrayList<Integer>>();
     
-    int NUM_BLOCKS = 233;
+    // initialize player
+    int playerX = 120, playerY = 120;
+    //int playerX, playerY;
+    //int enemyX = 240, enemyY = 240;
+    
+    // initialize enemies
+    int active_enemies = 5;
+    int NUM_ENEMIES = 10;
+    int[] enemyX = new int[NUM_ENEMIES];
+    int[] enemyY = new int[NUM_ENEMIES];
+    
+    // initialize blocks
+    int NUM_BLOCKS = 233; // determined by count from youtube video
     int[] blockX = new int[NUM_BLOCKS];
     int[] blockY = new int[NUM_BLOCKS];
     
+    // initialize concretes
     int active_concretes = 10;
-    int[] concreteX = new int[20];
-    int[] concreteY = new int[20];
+    int NUM_CONCRETES = 20;
+    int[] concreteX = new int[NUM_CONCRETES];
+    int[] concreteY = new int[NUM_CONCRETES];
 
     public Beast(int CELLSIZE_, int boardWidth_, int boardHeight_, int windowWidth_, int windowHeight_)   // Constructor is passed the size of the parent frame
     {
@@ -61,8 +72,9 @@ public class Beast extends JPanel implements ActionListener, KeyListener
         boardWidth = boardWidth_;
         boardHeight = boardHeight_;
         windowWidth = windowWidth_;
-        windowHeight = windowHeight_;
-                
+        windowHeight = windowHeight_;        
+        
+        // populate available_positions
         int index = 0;
         for (int i = 0; i < boardWidth; ++i) {
         	for (int j = 0; j < boardHeight - 1; ++j) {
@@ -83,48 +95,91 @@ public class Beast extends JPanel implements ActionListener, KeyListener
         	System.out.println("index: "+index);
         	System.out.println("numAvailablePositions: "+numAvailablePositions);
         }
+            	
+    	/*int randomIndex = rand.nextInt(numAvailablePositions);        	
+    	playerX = avaliable_positions.get(randomIndex).get(0);
+    	playerY = avaliable_positions.get(randomIndex).get(1);
+    	avaliable_positions.remove(randomIndex);
+    	numAvailablePositions--;*/
         
+        //assign_position(playerX, playerY);
+
+    	ArrayList<Integer> pos_ = get_available_position();
+        playerX = pos_.get(0);
+    	playerY = pos_.get(1);
+        
+        // position enemies
+        for (int i = 0; i < NUM_ENEMIES; ++i) {
+        	ArrayList<Integer> pos = get_available_position();
+            enemyX[i] = pos.get(0);
+        	enemyY[i] = pos.get(1);
+        }
+        
+        // position blocks
         for (int i = 0; i < NUM_BLOCKS; ++i) {
+        	ArrayList<Integer> pos = get_available_position();
+            blockX[i] = pos.get(0);
+        	blockY[i] = pos.get(1);
+            
         	//blockX[i] = rand.nextInt(boardWidth_) * CELLSIZE + CELLSIZE;
         	//blockY[i] = rand.nextInt(boardHeight_ - 1) * CELLSIZE + CELLSIZE;        	
         	//blockX[i] = avaliable_positions_o[randomIndex][0];
         	//blockY[i] = avaliable_positions_o[randomIndex][1];
         	
-        	int randomIndex = rand.nextInt(numAvailablePositions);        	
+        	/*int randomIndex = rand.nextInt(numAvailablePositions);        	
         	blockX[i] = avaliable_positions.get(randomIndex).get(0);
         	blockY[i] = avaliable_positions.get(randomIndex).get(1);
         	avaliable_positions.remove(randomIndex);
-        	numAvailablePositions--;
+        	numAvailablePositions--;*/
         	
         	///System.out.println("numAvailablePositions:" + numAvailablePositions + ", randomIndex:" + randomIndex + 
         	//		", x:" + avaliable_positions.get(randomIndex).get(0) + ", y:" + avaliable_positions.get(randomIndex).get(1));
         }
         
+        // position concretes
         for (int i = 0; i < active_concretes; ++i) {
+        	ArrayList<Integer> pos = get_available_position();
+            concreteX[i] = pos.get(0);
+        	concreteY[i] = pos.get(1);
+            
         	//concreteX[i] = rand.nextInt(boardWidth_) * CELLSIZE + CELLSIZE;
         	//concreteY[i] = rand.nextInt(boardHeight_ - 1) * CELLSIZE + CELLSIZE;
         	
         	//concreteX[i] = avaliable_positions_o[rand.nextInt(numAvailablePositions)][0];
         	//concreteY[i] = avaliable_positions_o[rand.nextInt(numAvailablePositions)][1];
-
-        	int randomIndex = rand.nextInt(numAvailablePositions);
+            
+        	/*int randomIndex = rand.nextInt(numAvailablePositions);
         	concreteX[i] = avaliable_positions.get(randomIndex).get(0);
         	concreteY[i] = avaliable_positions.get(randomIndex).get(1);
         	avaliable_positions.remove(randomIndex);
-        	numAvailablePositions--;
+        	numAvailablePositions--;*/
         }
+    }
+    
+    private ArrayList<Integer> get_available_position() {
+    	int randomIndex = rand.nextInt(numAvailablePositions);
+    	ArrayList<Integer> pos = new ArrayList<Integer>();
+    	pos.add(avaliable_positions.get(randomIndex).get(0));
+    	pos.add(avaliable_positions.get(randomIndex).get(1));
+    	avaliable_positions.remove(randomIndex);
+    	numAvailablePositions--;
+    	return pos;
     }
     
     public void update() {
     	if (time + 1000 < System.currentTimeMillis()) {
         	time = System.currentTimeMillis();
-        	enemyX += CELLSIZE;
+        	for (int i = 0; i < active_enemies; ++i) { 
+        		enemyX[i] += CELLSIZE;
+        	}
         	repaint();
     	}
-    	if (playerX == enemyX && playerY == enemyY) {
-//    		System.out.println("collision");
-//    		System.out.println(playerX + '-' + enemyX);
-//    		System.out.println(playerY + '-' + enemyY);
+    	for (int i = 0; i < active_enemies; ++i) {
+	    	if (playerX == enemyX[i] && playerY == enemyY[i]) {
+	    		System.out.println("collision");
+	//    		System.out.println(playerX + '-' + enemyX);
+	//    		System.out.println(playerY + '-' + enemyY);
+	    	}
     	}
     }
 
@@ -148,10 +203,6 @@ public class Beast extends JPanel implements ActionListener, KeyListener
         graphics.setColor(Color.decode("#00FFFF"));
         graphics.fillRect(playerX, playerY, CELLSIZE, CELLSIZE);
         
-        // draw enemies       
-        graphics.setColor(Color.decode("#FF0000"));
-        graphics.fillRect(enemyX, enemyY, CELLSIZE, CELLSIZE);
-        
         // draw concretes
     	graphics.setColor(Color.decode("#FFFF00"));
         for (int i = 0; i < active_concretes; ++i) {
@@ -164,6 +215,11 @@ public class Beast extends JPanel implements ActionListener, KeyListener
         	graphics.fillRect(blockX[i], blockY[i], CELLSIZE, CELLSIZE);
         }
         
+        // draw enemies       
+        graphics.setColor(Color.decode("#FF0000"));
+        for (int i = 0; i < active_enemies; ++i) {
+        	graphics.fillRect(enemyX[i], enemyY[i], CELLSIZE, CELLSIZE);
+        }        
         
         graphics.setColor(Color.decode("#009900"));
         for (int i = 0; i < numAvailablePositions; ++i) {
