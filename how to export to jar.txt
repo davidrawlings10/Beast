@@ -1,0 +1,9 @@
+File
+Export
+Java
+Runnable JAR
+Next
+Launch configuaration: Main - Beast
+Export destination: Beast\Beast.jar
+Library handling: Extract required libraries into generated JAR
+Finish
