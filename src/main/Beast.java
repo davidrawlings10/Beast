@@ -1,5 +1,6 @@
 package main;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.List;
@@ -227,8 +228,13 @@ public class Beast extends JPanel implements ActionListener, KeyListener
         }
         
         // draw text
-        graphics.setColor(Color.WHITE);
-        graphics.drawString("Beasts: ", 200, windowHeight - 15);
+        graphics.setColor(Color.GRAY);
+        graphics.setFont(new Font("Arial Black", Font.PLAIN, 20));
+        graphics.drawString("Beasts: " + active_enemies, 450, windowHeight - 12);
+        graphics.drawString("Level: " + "1K", 600, windowHeight - 12);
+        graphics.drawString("Time: " + "0", 750, windowHeight - 12);
+        graphics.drawString("Lives: " + "2", 900, windowHeight - 12);
+        graphics.drawString("Score:  " + "0", 1050, windowHeight - 12);
     }
 
     public void actionPerformed(ActionEvent e) 
