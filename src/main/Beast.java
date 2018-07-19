@@ -36,8 +36,10 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     Direction direction = Direction.UP;
     
     int numAvailablePositions = 760; // = boardWidth * (boardHeight - 1); (these vars were not populated yet of course)
-    //int[][] avaliable_positions_o = new int[760][2];    
     ArrayList<ArrayList<Integer>> avaliable_positions = new ArrayList<ArrayList<Integer>>();
+    
+    int NUM_QUADRANTS = 32;
+    int CELLS_PER_QUADRANT = 5;
     
     // initialize player
     int playerX = 120, playerY = 120;
@@ -54,12 +56,14 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     int NUM_BLOCKS = 233; // determined by count from youtube video
     int[] blockX = new int[NUM_BLOCKS];
     int[] blockY = new int[NUM_BLOCKS];
+    //int[] block_quadrant = new int[NUM_BLOCKS];
     
     // initialize concretes
     int active_concretes = 10;
     int NUM_CONCRETES = 20;
     int[] concreteX = new int[NUM_CONCRETES];
     int[] concreteY = new int[NUM_CONCRETES];
+    int[] concrete_quadrant = new int[NUM_CONCRETES];
 
     public Beast(int CELLSIZE_, int boardWidth_, int boardHeight_, int windowWidth_, int windowHeight_)   // Constructor is passed the size of the parent frame
     {
@@ -167,19 +171,113 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     	return pos;
     }
     
+    /*public int determine_quadrant(int x, int y) {   	
+		if (x < (CELLSIZE * CELLS_PER_QUADRANT) * 1) {
+			return determine_quadrantY(y, 0);
+		} else if (x >= (CELLSIZE * CELLS_PER_QUADRANT) * 1 && x < (CELLSIZE * CELLS_PER_QUADRANT) * 2) {
+			return determine_quadrantY(y, 1);
+		} else if (x >= (CELLSIZE * CELLS_PER_QUADRANT) * 2 && x < (CELLSIZE * CELLS_PER_QUADRANT) * 3) {
+			return determine_quadrantY(y, 2);    			
+		} else if (x >= (CELLSIZE * CELLS_PER_QUADRANT) * 3 && x < (CELLSIZE * CELLS_PER_QUADRANT) * 4) {
+			return determine_quadrantY(y, 3);    			
+		} else if (x >= (CELLSIZE * CELLS_PER_QUADRANT) * 4 && x < (CELLSIZE * CELLS_PER_QUADRANT) * 5) {
+			return determine_quadrantY(y, 4);    			
+		} else if (x >= (CELLSIZE * CELLS_PER_QUADRANT) * 5 && x < (CELLSIZE * CELLS_PER_QUADRANT) * 6) {
+			return determine_quadrantY(y, 5);    			
+		} else if (x >= (CELLSIZE * CELLS_PER_QUADRANT) * 6 && x < (CELLSIZE * CELLS_PER_QUADRANT) * 7) {
+			return determine_quadrantY(y, 6);    			
+		} else if (x >= (CELLSIZE * CELLS_PER_QUADRANT) * 7 && x < (CELLSIZE * CELLS_PER_QUADRANT) * 8) {
+			return determine_quadrantY(y, 7);
+		}
+		return -1;
+    }
+    
+    public int determine_quadrantY(int y, int x_quadrant) {
+		if (y < (CELLSIZE * CELLS_PER_QUADRANT) * 1) {
+			return x_quadrant;
+			//System.out.println("assigned block to: " + x_quadrant);
+		} else if (y >= (CELLSIZE * CELLS_PER_QUADRANT) * 1 && y < (CELLSIZE * CELLS_PER_QUADRANT) * 2) {
+			return 8 + x_quadrant;
+			//System.out.println("assigned block to: " + (8 + x_quadrant));
+		} else if (y >= (CELLSIZE * CELLS_PER_QUADRANT) * 2 && y < (CELLSIZE * CELLS_PER_QUADRANT) * 3) {
+			return 16 + x_quadrant;
+			//System.out.println("assigned block to: " + (16 + x_quadrant));
+		} else if (y >= (CELLSIZE * CELLS_PER_QUADRANT) * 3 && y < (CELLSIZE * CELLS_PER_QUADRANT) * 4) {
+			return 24 + x_quadrant;
+			//System.out.println("assigned block to: " + (24 + x_quadrant));
+		}
+		return -1;
+    }*/
+    
+    private boolean check_availablity(int x, int y) {
+    	if (x < CELLSIZE || y < CELLSIZE || x > CELLSIZE * boardWidth || y > CELLSIZE * (boardHeight - 1)) {
+    		return false;
+    	}
+    	for (int i = 0; i < NUM_BLOCKS; ++i) {
+    		if (blockX[i] == x && blockY[i] == y) {
+    			return false;
+    		}
+    	}
+    	for (int i = 0; i < active_concretes; ++i) {
+    		if (concreteX[i] == x && concreteY[i] == y) {
+    			return false;
+    		}
+    	}
+    	for (int i = 0; i < active_enemies; ++i) {
+    		if (enemyX[i] == x && enemyY[i] == y) {
+    			return false;
+    		}
+    	}
+    	return true;
+    }
+    
+    private void add_if_available(int x, int y, ArrayList<Integer> potential_movesX, ArrayList<Integer> potential_movesY) {
+    	if (check_availablity(x, y)) {
+    		potential_movesX.add(x);
+    		potential_movesY.add(y);
+    	}
+    }
+    
     public void update() {
     	if (time + 1000 < System.currentTimeMillis()) {
         	time = System.currentTimeMillis();
-        	for (int i = 0; i < active_enemies; ++i) { 
-        		enemyX[i] += CELLSIZE;
+        	
+        	/*for (int i = 0; i < NUM_BLOCKS; ++i) {
+        		block_quadrant[i] = determine_quadrant(blockX[i], blockY[i]);
         	}
+        	
+        	for (int i = 0; i < NUM_CONCRETES; ++i) {
+        		concrete_quadrant[i] = determine_quadrant(concreteX[i], concreteY[i]);
+        	}*/
+        	
+        	for (int i = 0; i < active_enemies; ++i) {
+        	    ArrayList<Integer> potential_movesX = new ArrayList<Integer>();
+        	    ArrayList<Integer> potential_movesY = new ArrayList<Integer>();
+        	    add_if_available(enemyX[i] - CELLSIZE, enemyY[i] - CELLSIZE, potential_movesX, potential_movesY);
+        	    add_if_available(enemyX[i] - CELLSIZE, enemyY[i]           , potential_movesX, potential_movesY);
+        	    add_if_available(enemyX[i] - CELLSIZE, enemyY[i] + CELLSIZE, potential_movesX, potential_movesY);
+        	    add_if_available(enemyX[i]           , enemyY[i] - CELLSIZE, potential_movesX, potential_movesY);
+        	    add_if_available(enemyX[i]           , enemyY[i]           , potential_movesX, potential_movesY);
+        	    add_if_available(enemyX[i]           , enemyY[i] + CELLSIZE, potential_movesX, potential_movesY);
+        	    add_if_available(enemyX[i] + CELLSIZE, enemyY[i] - CELLSIZE, potential_movesX, potential_movesY);
+        	    add_if_available(enemyX[i] + CELLSIZE, enemyY[i]           , potential_movesX, potential_movesY);
+        	    add_if_available(enemyX[i] + CELLSIZE, enemyY[i] + CELLSIZE, potential_movesX, potential_movesY);
+        	    if (potential_movesX.size() == 0)
+        	    	continue;
+        	    int chosen_index = rand.nextInt(potential_movesX.size());    	    
+        	    int chosenX = potential_movesX.get(chosen_index);
+        	    int chosenY = potential_movesY.get(chosen_index);
+        		enemyX[i] = chosenX;
+        		enemyY[i] = chosenY;
+        		//System.out.print(i + ", ");
+        	}
+        	//System.out.println(" - " + boardWidth + " - " + windowWidth + " - " );
         	repaint();
     	}
     	for (int i = 0; i < active_enemies; ++i) {
 	    	if (playerX == enemyX[i] && playerY == enemyY[i]) {
-	    		System.out.println("collision");
-	//    		System.out.println(playerX + '-' + enemyX);
-	//    		System.out.println(playerY + '-' + enemyY);
+	    		playerX = 30 * 38; // 1140
+	    		playerY = 30 * 20; // 600
 	    	}
     	}
     }
