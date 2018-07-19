@@ -48,6 +48,7 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     int NUM_ENEMIES = 10;
     int[] enemyX = new int[NUM_ENEMIES];
     int[] enemyY = new int[NUM_ENEMIES];
+    boolean[] enemy_alive = new boolean[NUM_ENEMIES];
     
     // initialize blocks
     int NUM_BLOCKS = 233; // determined by count from youtube video
@@ -103,6 +104,7 @@ public class Beast extends JPanel implements ActionListener, KeyListener
         	ArrayList<Integer> pos = get_available_position();
             enemyX[i] = pos.get(0);
         	enemyY[i] = pos.get(1);
+        	enemy_alive[i] = true;
         }
         
         // position blocks
@@ -232,7 +234,9 @@ public class Beast extends JPanel implements ActionListener, KeyListener
         // draw enemies       
         graphics.setColor(Color.decode("#FF0000"));
         for (int i = 0; i < active_enemies; ++i) {
-        	graphics.fillRect(enemyX[i], enemyY[i], CELLSIZE, CELLSIZE);
+        	if (enemy_alive[i]) {
+        		graphics.fillRect(enemyX[i], enemyY[i], CELLSIZE, CELLSIZE);
+        	}
         }        
         
         /*graphics.setColor(Color.decode("#009900"));
@@ -341,7 +345,21 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     	if (y < CELLSIZE || y > CELLSIZE * (boardHeight - 1)) {
     		return null;
     	}
-    	for (int i = 0; i < NUM_CONCRETES; ++i) {
+    	for (int i = 0; i < active_enemies; ++i) {
+    		if (enemyX[i] == x && enemyY[i] == y) {
+    			int y_check = 0;
+    			if (direction == Direction.UP) { y_check = y - CELLSIZE; }
+    			if (direction == Direction.DOWN) { y_check = y + CELLSIZE; }
+    	    	for (int j = 0; j < NUM_BLOCKS; ++j) {
+    	    		if (blockX[j] == x && blockY[j] == y_check) {
+    	    			enemy_alive[i] = false;
+    	    			return y;
+    	    		}
+    	    	}
+    			return null;
+    		}
+    	}
+    	for (int i = 0; i < active_concretes; ++i) {
     		if (concreteX[i] == x && concreteY[i] == y) {
     			return null;
     		}
@@ -360,7 +378,21 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     	if (x < CELLSIZE || x > CELLSIZE * boardWidth) {
     		return null;
     	}
-    	for (int i = 0; i < NUM_CONCRETES; ++i) {
+    	for (int i = 0; i < active_enemies; ++i) {
+    		if (enemyX[i] == x && enemyY[i] == y) {
+    			int x_check = 0;
+    			if (direction == Direction.LEFT) { x_check = x - CELLSIZE; }
+    			if (direction == Direction.RIGHT) { x_check = x + CELLSIZE; }
+    	    	for (int j = 0; j < NUM_BLOCKS; ++j) {
+    	    		if (blockX[j] == x_check && blockY[j] == y) {
+    	    			enemy_alive[i] = false;
+    	    			return x;
+    	    		}
+    	    	}
+    			return null;
+    		}
+    	}
+    	for (int i = 0; i < active_concretes; ++i) {
     		if (concreteX[i] == x && concreteY[i] == y) {
     			return null;
     		}
