@@ -34,7 +34,7 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     
     Direction direction = Direction.UP;
     
-    int numAvailablePositions = 760;
+    int numAvailablePositions = -1;
     ArrayList<ArrayList<Integer>> avaliable_positions = new ArrayList<ArrayList<Integer>>();
     
     int NUM_QUADRANTS = 32;
@@ -83,51 +83,6 @@ public class Beast extends JPanel implements ActionListener, KeyListener
         windowHeight = windowHeight_;        
         
         setup_level();
-        
-        /*// populate available_positions
-        int index = 0;
-        for (int i = 0; i < boardWidth; ++i) {
-        	for (int j = 0; j < boardHeight - 1; ++j) {
-        		
-        		ArrayList<Integer> pos = new ArrayList<Integer>();
-        		pos.add(i * CELLSIZE + CELLSIZE);
-        		pos.add(j * CELLSIZE + CELLSIZE);
-        		avaliable_positions.add(pos);
-        		
-        		index++;
-        	}
-        }
-        if (index != numAvailablePositions) {
-        	System.out.println("WARNING: assignment index did not match numAvailablePositions");
-        	System.out.println("index: "+index);
-        	System.out.println("numAvailablePositions: "+numAvailablePositions);
-        }
-
-    	ArrayList<Integer> pos_ = get_available_position();
-        playerX = pos_.get(0);
-    	playerY = pos_.get(1);
-        
-        // position enemies
-        for (int i = 0; i < active_enemies; ++i) {
-        	ArrayList<Integer> pos = get_available_position();
-            enemyX[i] = pos.get(0);
-        	enemyY[i] = pos.get(1);
-        	enemy_alive[i] = true;
-        }
-        
-        // position blocks
-        for (int i = 0; i < NUM_BLOCKS; ++i) {
-        	ArrayList<Integer> pos = get_available_position();
-            blockX[i] = pos.get(0);
-        	blockY[i] = pos.get(1);
-        }
-        
-        // position concretes
-        for (int i = 0; i < active_concretes; ++i) {
-        	ArrayList<Integer> pos = get_available_position();
-            concreteX[i] = pos.get(0);
-        	concreteY[i] = pos.get(1);
-        }*/
     }
     
     private void setup_level() {
@@ -137,6 +92,7 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     	++level;
     	
     	int index = 0;
+    	avaliable_positions.clear();
         for (int i = 0; i < boardWidth; ++i) {
         	for (int j = 0; j < boardHeight - 1; ++j) {
         		
@@ -148,12 +104,13 @@ public class Beast extends JPanel implements ActionListener, KeyListener
         		index++;
         	}
         }
+        numAvailablePositions = 760;
         if (index != numAvailablePositions) {
         	System.out.println("WARNING: assignment index did not match numAvailablePositions");
         	System.out.println("index: "+index);
         	System.out.println("numAvailablePositions: "+numAvailablePositions);
         }
-
+        
     	ArrayList<Integer> pos_ = get_available_position();
         playerX = pos_.get(0);
     	playerY = pos_.get(1);
@@ -184,7 +141,7 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     }
     
     private ArrayList<Integer> get_available_position() {
-    	int randomIndex = rand.nextInt(numAvailablePositions);
+    	int randomIndex = rand.nextInt(numAvailablePositions); // bug here relating to WARNING: assignment index did not match numAvailablePositions
     	ArrayList<Integer> pos = new ArrayList<Integer>();
     	pos.add(avaliable_positions.get(randomIndex).get(0));
     	pos.add(avaliable_positions.get(randomIndex).get(1));
@@ -256,43 +213,15 @@ public class Beast extends JPanel implements ActionListener, KeyListener
 				continue;
 	    	if (playerX == enemyX[i] && playerY == enemyY[i]) {
 	    		lives--;
+	    		if (lives == 0) { playerX = 2000; }
     			while (true) {
     				playerX = rand.nextInt(boardWidth) * CELLSIZE + CELLSIZE;
-    				playerY = rand.nextInt(boardHeight - 1) * CELLSIZE + CELLSIZE;	    			
-    				if (check_availablity(playerX, playerY))
-    					break;
+    				playerY = rand.nextInt(boardHeight - 1) * CELLSIZE + CELLSIZE;
+    				if (lives > 0) {
+    					if (check_availablity(playerX, playerY))
+    						break;
+    				}
     			}
-    			
-    			/*playerPositionFinalized = true;
-    			System.out.println("attempting to position player at: " + playerX + ", " + playerY);
-    	        for (int j = 0; j < NUM_BLOCKS; ++j) {
-    	        	if (playerX == blockX[j] && playerY == blockY[j]) {
-    	        		System.out.println("collided with block");
-    	        		playerPositionFinalized = false;
-    	        	}
-    	        }
-    	        for (int j = 0; j < active_concretes; ++j) {
-    	        	if (playerX == concreteX[j] && playerY == concreteY[j]) {
-    	        		System.out.println("collided with concrete");
-    	        		playerPositionFinalized = false;
-    	        	}
-    	        }
-    	        for (int j = 0; j < active_enemies; ++j) {
-    	        	if (playerX == enemyX[j] && playerY == enemyY[j]) {
-    	        		System.out.println("collided with enemy");
-    	        		playerPositionFinalized = false;
-    	        	}
-    	        }
-    			if (playerPositionFinalized) {
-	    			System.out.println("positioning player at: " + playerX + ", " + playerY);
-    				break;
-    			}*/
-	    		
-	    		/*try {
-	    			Thread.sleep(5000);
-	    		} catch (Exception e) {
-	    			System.out.println(e.toString());
-	    		}*/
 	    	}
     	}
     }
@@ -363,7 +292,7 @@ public class Beast extends JPanel implements ActionListener, KeyListener
         int keyCode = e.getKeyCode();
         
         boolean playerLegalMove = true;
-        int player_potentialX = -1, player_potentialY = -1;
+        int player_potentialX = playerX, player_potentialY = playerY;
         
         if (keyCode == KeyEvent.VK_UP) 
         {
@@ -414,19 +343,19 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     	for (int i = 0; i < NUM_BLOCKS; ++i) {
     		if (blockX[i] == player_potentialX && blockY[i] == player_potentialY) {
     			if (direction == Direction.UP) {
-    				Integer y = moveToNextEmptyPositionY(i, blockX[i], blockY[i] - CELLSIZE);
+    				Integer y = findNextEmptyPositionY(i, blockX[i], blockY[i] - CELLSIZE);
     				if (y != null) { blockY[i] = y; } else { playerLegalMove = false; }
     			}
     			if (direction == Direction.DOWN) { 
-    				Integer y = moveToNextEmptyPositionY(i, blockX[i], blockY[i] + CELLSIZE);
+    				Integer y = findNextEmptyPositionY(i, blockX[i], blockY[i] + CELLSIZE);
     				if (y != null) { blockY[i] = y; } else { playerLegalMove = false; }
     			}
     			if (direction == Direction.LEFT) { 
-    				Integer x = moveToNextEmptyPositionX(i, blockX[i] - CELLSIZE, blockY[i]);
+    				Integer x = findNextEmptyPositionX(i, blockX[i] - CELLSIZE, blockY[i]);
     				if (x != null) { blockX[i] = x; } else { playerLegalMove = false; }
     			}
     			if (direction == Direction.RIGHT) { 
-    				Integer x = moveToNextEmptyPositionX(i, blockX[i] + CELLSIZE, blockY[i]);
+    				Integer x = findNextEmptyPositionX(i, blockX[i] + CELLSIZE, blockY[i]);
     				if (x != null) { blockX[i] = x; } else { playerLegalMove = false; }
     			}
     		}
@@ -435,8 +364,6 @@ public class Beast extends JPanel implements ActionListener, KeyListener
 			playerX = player_potentialX;
 			playerY = player_potentialY;
     	}
-    	
-        //checkForCollisions(playerX, playerY, -1);
     }
     
     private void enemy_killed(int index) {
@@ -447,7 +374,7 @@ public class Beast extends JPanel implements ActionListener, KeyListener
 			setup_level();    	
     }
     
-    private Integer moveToNextEmptyPositionY(int index, int x, int y) {
+    private Integer findNextEmptyPositionY(int index, int x, int y) {
     	if (y < CELLSIZE || y > CELLSIZE * (boardHeight - 1)) {
     		return null;
     	}
@@ -486,13 +413,13 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     		if (blockX[i] == x && blockY[i] == y && i != index) {
     			if (direction == Direction.UP)  { y -= CELLSIZE; }
     			if (direction == Direction.DOWN) { y += CELLSIZE; }
-    			return moveToNextEmptyPositionY(index, x, y);
+    			return findNextEmptyPositionY(index, x, y);
     		}
     	}
     	return y;
     }
     
-    private Integer moveToNextEmptyPositionX(int index, int x, int y) {
+    private Integer findNextEmptyPositionX(int index, int x, int y) {
     	if (x < CELLSIZE || x > CELLSIZE * boardWidth) {
     		return null;
     	}
@@ -531,32 +458,11 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     		if (blockX[i] == x && blockY[i] == y && i != index) {
     			if (direction == Direction.LEFT)  { x -= CELLSIZE; }
     			if (direction == Direction.RIGHT) { x += CELLSIZE; }
-    			return moveToNextEmptyPositionX(index, x, y);
+    			return findNextEmptyPositionX(index, x, y);
     		}
     	}
     	return x;
     }
-    
-    /*private void checkForCollisions(int x, int y, int id) {
-    	for (int i = 0; i < NUM_BLOCKS; ++i) {
-    		//System.out.println(i);
-    		if (blockX[i] == x && blockY[i] == y && i != id) {
-    			if (direction == Direction.UP) {
-    				blockY[i] -= CELLSIZE;
-    			}
-    			if (direction == Direction.DOWN) {
-    				blockY[i] += CELLSIZE;
-    			}
-    			if (direction == Direction.LEFT) {
-    				blockX[i] -= CELLSIZE;
-    			}
-    			if (direction == Direction.RIGHT) {
-    				blockX[i] += CELLSIZE;
-    			}
-    			checkForCollisions(blockX[i], blockY[i], i);
-    		}
-    	}
-    }*/
 
     public void keyTyped(KeyEvent e) {}
     
