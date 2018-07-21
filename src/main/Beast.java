@@ -41,6 +41,7 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     int CELLS_PER_QUADRANT = 5;
     
     int level = 0;
+    int score = 0;
     
     // initialize player
     int playerX = -1, playerY = -1;
@@ -49,7 +50,7 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     // initialize enemies
     int active_enemies = -1; // will be initialized later
     int alive_enemies = -1; // will be initialized later
-    int NUM_ENEMIES = 10;
+    int NUM_ENEMIES = 105;
     int[] enemyX = new int[NUM_ENEMIES];
     int[] enemyY = new int[NUM_ENEMIES];
     boolean[] enemy_alive = new boolean[NUM_ENEMIES];
@@ -130,6 +131,9 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     }
     
     private void setup_level() {
+    	if (level > 0)
+    		score += 9 + 4 * level;
+    	
     	++level;
     	
     	int index = 0;
@@ -345,7 +349,7 @@ public class Beast extends JPanel implements ActionListener, KeyListener
         graphics.drawString("Level: " + level + "K", 600, windowHeight - 12);
         graphics.drawString("Time: " + "0", 750, windowHeight - 12);
         graphics.drawString("Lives: " + lives, 900, windowHeight - 12);
-        graphics.drawString("Score:  " + "0", 1050, windowHeight - 12);
+        graphics.drawString("Score:  " + score, 1050, windowHeight - 12);
     }
 
     public void actionPerformed(ActionEvent e) 
@@ -438,6 +442,7 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     private void enemy_killed(int index) {
 		enemy_alive[index] = false;
 		alive_enemies--;
+		score += 2;
 		if (alive_enemies == 0)
 			setup_level();    	
     }
