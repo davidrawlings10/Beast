@@ -10,6 +10,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.JPanel;
 import javax.swing.Timer;
@@ -39,12 +40,15 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     int NUM_QUADRANTS = 32;
     int CELLS_PER_QUADRANT = 5;
     
+    int level = 0;
+    
     // initialize player
-    int playerX = 120, playerY = 120;
+    int playerX = -1, playerY = -1;
     int lives = 5;
     
     // initialize enemies
-    int active_enemies = 7;
+    int active_enemies = -1; // will be initialized later
+    int alive_enemies = -1; // will be initialized later
     int NUM_ENEMIES = 10;
     int[] enemyX = new int[NUM_ENEMIES];
     int[] enemyY = new int[NUM_ENEMIES];
@@ -70,13 +74,16 @@ public class Beast extends JPanel implements ActionListener, KeyListener
         setFocusable(true);
         setFocusTraversalKeysEnabled(false);
         
+        // number of cells in board (width: 38, height: 20)
         CELLSIZE = CELLSIZE_;
         boardWidth = boardWidth_;
         boardHeight = boardHeight_;
         windowWidth = windowWidth_;
         windowHeight = windowHeight_;        
         
-        // populate available_positions
+        setup_level();
+        
+        /*// populate available_positions
         int index = 0;
         for (int i = 0; i < boardWidth; ++i) {
         	for (int j = 0; j < boardHeight - 1; ++j) {
@@ -100,7 +107,57 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     	playerY = pos_.get(1);
         
         // position enemies
-        for (int i = 0; i < NUM_ENEMIES; ++i) {
+        for (int i = 0; i < active_enemies; ++i) {
+        	ArrayList<Integer> pos = get_available_position();
+            enemyX[i] = pos.get(0);
+        	enemyY[i] = pos.get(1);
+        	enemy_alive[i] = true;
+        }
+        
+        // position blocks
+        for (int i = 0; i < NUM_BLOCKS; ++i) {
+        	ArrayList<Integer> pos = get_available_position();
+            blockX[i] = pos.get(0);
+        	blockY[i] = pos.get(1);
+        }
+        
+        // position concretes
+        for (int i = 0; i < active_concretes; ++i) {
+        	ArrayList<Integer> pos = get_available_position();
+            concreteX[i] = pos.get(0);
+        	concreteY[i] = pos.get(1);
+        }*/
+    }
+    
+    private void setup_level() {
+    	++level;
+    	
+    	int index = 0;
+        for (int i = 0; i < boardWidth; ++i) {
+        	for (int j = 0; j < boardHeight - 1; ++j) {
+        		
+        		ArrayList<Integer> pos = new ArrayList<Integer>();
+        		pos.add(i * CELLSIZE + CELLSIZE);
+        		pos.add(j * CELLSIZE + CELLSIZE);
+        		avaliable_positions.add(pos);
+        		
+        		index++;
+        	}
+        }
+        if (index != numAvailablePositions) {
+        	System.out.println("WARNING: assignment index did not match numAvailablePositions");
+        	System.out.println("index: "+index);
+        	System.out.println("numAvailablePositions: "+numAvailablePositions);
+        }
+
+    	ArrayList<Integer> pos_ = get_available_position();
+        playerX = pos_.get(0);
+    	playerY = pos_.get(1);
+        
+        // position enemies
+    	active_enemies = 5 + level * 2;
+    	alive_enemies = 5 + level * 2;
+        for (int i = 0; i < active_enemies; ++i) {
         	ArrayList<Integer> pos = get_available_position();
             enemyX[i] = pos.get(0);
         	enemyY[i] = pos.get(1);
@@ -191,10 +248,47 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     	
     	// check if player collides with enemy
     	for (int i = 0; i < active_enemies; ++i) {
+			if (!enemy_alive[i])
+				continue;
 	    	if (playerX == enemyX[i] && playerY == enemyY[i]) {
 	    		lives--;
-	    		playerX = 30 * 38; // 1140
-	    		playerY = 30 * 20; // 600
+    			while (true) {
+    				playerX = rand.nextInt(boardWidth) * CELLSIZE + CELLSIZE;
+    				playerY = rand.nextInt(boardHeight - 1) * CELLSIZE + CELLSIZE;	    			
+    				if (check_availablity(playerX, playerY))
+    					break;
+    			}
+    			
+    			/*playerPositionFinalized = true;
+    			System.out.println("attempting to position player at: " + playerX + ", " + playerY);
+    	        for (int j = 0; j < NUM_BLOCKS; ++j) {
+    	        	if (playerX == blockX[j] && playerY == blockY[j]) {
+    	        		System.out.println("collided with block");
+    	        		playerPositionFinalized = false;
+    	        	}
+    	        }
+    	        for (int j = 0; j < active_concretes; ++j) {
+    	        	if (playerX == concreteX[j] && playerY == concreteY[j]) {
+    	        		System.out.println("collided with concrete");
+    	        		playerPositionFinalized = false;
+    	        	}
+    	        }
+    	        for (int j = 0; j < active_enemies; ++j) {
+    	        	if (playerX == enemyX[j] && playerY == enemyY[j]) {
+    	        		System.out.println("collided with enemy");
+    	        		playerPositionFinalized = false;
+    	        	}
+    	        }
+    			if (playerPositionFinalized) {
+	    			System.out.println("positioning player at: " + playerX + ", " + playerY);
+    				break;
+    			}*/
+	    		
+	    		/*try {
+	    			Thread.sleep(5000);
+	    		} catch (Exception e) {
+	    			System.out.println(e.toString());
+	    		}*/
 	    	}
     	}
     }
@@ -247,8 +341,8 @@ public class Beast extends JPanel implements ActionListener, KeyListener
         // draw text
         graphics.setColor(Color.GRAY);
         graphics.setFont(new Font("Arial Black", Font.PLAIN, 20));
-        graphics.drawString("Beasts: " + active_enemies, 450, windowHeight - 12);
-        graphics.drawString("Level: " + "1K", 600, windowHeight - 12);
+        graphics.drawString("Beasts: " + alive_enemies, 450, windowHeight - 12);
+        graphics.drawString("Level: " + level + "K", 600, windowHeight - 12);
         graphics.drawString("Time: " + "0", 750, windowHeight - 12);
         graphics.drawString("Lives: " + lives, 900, windowHeight - 12);
         graphics.drawString("Score:  " + "0", 1050, windowHeight - 12);
@@ -341,18 +435,37 @@ public class Beast extends JPanel implements ActionListener, KeyListener
         //checkForCollisions(playerX, playerY, -1);
     }
     
+    private void enemy_killed(int index) {
+		enemy_alive[index] = false;
+		alive_enemies--;
+		if (alive_enemies == 0)
+			setup_level();    	
+    }
+    
     private Integer moveToNextEmptyPositionY(int index, int x, int y) {
     	if (y < CELLSIZE || y > CELLSIZE * (boardHeight - 1)) {
     		return null;
     	}
     	for (int i = 0; i < active_enemies; ++i) {
     		if (enemyX[i] == x && enemyY[i] == y) {
+    			if (!enemy_alive[i])
+    				continue;
     			int y_check = 0;
     			if (direction == Direction.UP) { y_check = y - CELLSIZE; }
     			if (direction == Direction.DOWN) { y_check = y + CELLSIZE; }
+    	    	if (y_check < CELLSIZE || y_check > CELLSIZE * (boardHeight - 1)) {
+	    			enemy_killed(i);
+	    			return y;    	    		
+    	    	}
+    	    	for (int j = 0; j < active_concretes; ++j) {
+    	    		if (concreteX[j] == x && concreteY[j] == y_check) {
+    	    			enemy_killed(i);
+    	    			return y;
+    	    		}
+    	    	}
     	    	for (int j = 0; j < NUM_BLOCKS; ++j) {
     	    		if (blockX[j] == x && blockY[j] == y_check) {
-    	    			enemy_alive[i] = false;
+    	    			enemy_killed(i);
     	    			return y;
     	    		}
     	    	}
@@ -380,12 +493,24 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     	}
     	for (int i = 0; i < active_enemies; ++i) {
     		if (enemyX[i] == x && enemyY[i] == y) {
+    			if (!enemy_alive[i])
+    				continue;
     			int x_check = 0;
     			if (direction == Direction.LEFT) { x_check = x - CELLSIZE; }
     			if (direction == Direction.RIGHT) { x_check = x + CELLSIZE; }
+    	    	if (x_check < CELLSIZE || x_check > CELLSIZE * boardWidth) {
+	    			enemy_killed(i);
+	    			return x;    	    		
+    	    	}
+    	    	for (int j = 0; j < active_concretes; ++j) {
+    	    		if (concreteX[j] == x_check && concreteY[j] == y) {
+    	    			enemy_killed(i);
+    	    			return x;
+    	    		}
+    	    	}
     	    	for (int j = 0; j < NUM_BLOCKS; ++j) {
     	    		if (blockX[j] == x_check && blockY[j] == y) {
-    	    			enemy_alive[i] = false;
+    	    			enemy_killed(i);
     	    			return x;
     	    		}
     	    	}
