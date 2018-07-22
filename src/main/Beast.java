@@ -30,7 +30,6 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     int boardHeight;
     int windowWidth;
     int windowHeight;
-    long time;
     
     Direction direction = Direction.UP;
     
@@ -43,6 +42,9 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     int level = 0;
     int score = 0;
     
+    long setupTime = 0;
+    boolean settingUpLevel = true;
+    
     // initialize player
     int playerX = -1, playerY = -1;
     int lives = 5;
@@ -54,6 +56,7 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     int[] enemyX = new int[NUM_ENEMIES];
     int[] enemyY = new int[NUM_ENEMIES];
     boolean[] enemy_alive = new boolean[NUM_ENEMIES];
+    long enemyTime;
     
     // initialize blocks
     int NUM_BLOCKS = 233; // determined by count from youtube video
@@ -180,9 +183,15 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     }
     
     public void update() {
+    	if (settingUpLevel == true) {
+    		settingUpLevel = false;
+    		setupTime = System.currentTimeMillis();
+    		System.out.println("capturing:" + setupTime);
+    	}
+    	
     	// move enemy
-    	if (time + 1000 < System.currentTimeMillis()) {
-        	time = System.currentTimeMillis();
+    	if (enemyTime + 1000 < System.currentTimeMillis()) {
+        	enemyTime = System.currentTimeMillis();
         	
         	for (int i = 0; i < active_enemies; ++i) {
         	    ArrayList<Integer> potential_movesX = new ArrayList<Integer>();
@@ -236,7 +245,7 @@ public class Beast extends JPanel implements ActionListener, KeyListener
         graphics.fillRect(0, 0, windowWidth, windowHeight);
         
         // draw border
-        graphics.setColor(Color.YELLOW);
+        graphics.setColor(Color.decode("#DDDD00"));
         graphics.fillRect(0, 0, windowWidth, CELLSIZE); // top
         graphics.fillRect(0, 0, CELLSIZE, windowHeight - CELLSIZE); // left
         graphics.fillRect(windowWidth - CELLSIZE, 0, windowWidth, windowHeight - CELLSIZE); // right
@@ -244,16 +253,44 @@ public class Beast extends JPanel implements ActionListener, KeyListener
         
         // draw player
         graphics.setColor(Color.decode("#00FFFF"));
-        graphics.fillRect(playerX, playerY, CELLSIZE, CELLSIZE);
+        //graphics.fillRect(playerX, playerY, CELLSIZE, CELLSIZE);
+        graphics.fillRect(playerX + 13, playerY + 2, 1, 26);
+        graphics.fillRect(playerX + 12, playerY + 3, 1, 24);
+        graphics.fillRect(playerX + 11, playerY + 4, 1, 22);
+        graphics.fillRect(playerX + 10, playerY + 5, 1, 20);
+        graphics.fillRect(playerX + 9,  playerY + 6, 1, 18);
+        graphics.fillRect(playerX + 8,  playerY + 7, 1, 16);
+        graphics.fillRect(playerX + 7,  playerY + 8, 1, 14);
+        graphics.fillRect(playerX + 6,  playerY + 9, 1, 12);
+        graphics.fillRect(playerX + 5,  playerY + 10, 1, 10);
+        graphics.fillRect(playerX + 4,  playerY + 11, 1, 8);
+        graphics.fillRect(playerX + 3,  playerY + 12, 1, 6);
+        graphics.fillRect(playerX + 2,  playerY + 13, 1, 4);
+        graphics.fillRect(playerX + 1,  playerY + 14, 1, 2);
+        
+        graphics.fillRect(playerX + 17, playerY + 2, 1, 26);
+        graphics.fillRect(playerX + 18, playerY + 3, 1, 24);
+        graphics.fillRect(playerX + 19, playerY + 4, 1, 22);
+        graphics.fillRect(playerX + 20, playerY + 5, 1, 20);
+        graphics.fillRect(playerX + 21,  playerY + 6, 1, 18);
+        graphics.fillRect(playerX + 22,  playerY + 7, 1, 16);
+        graphics.fillRect(playerX + 23,  playerY + 8, 1, 14);
+        graphics.fillRect(playerX + 24,  playerY + 9, 1, 12);
+        graphics.fillRect(playerX + 25,  playerY + 10, 1, 10);
+        graphics.fillRect(playerX + 26,  playerY + 11, 1, 8);
+        graphics.fillRect(playerX + 27,  playerY + 12, 1, 6);
+        graphics.fillRect(playerX + 28,  playerY + 13, 1, 4);
+        graphics.fillRect(playerX + 29,  playerY + 14, 1, 2);
+        
         
         // draw concretes
-    	graphics.setColor(Color.decode("#FFFF00"));
+    	graphics.setColor(Color.decode("#DDDD00"));
         for (int i = 0; i < active_concretes; ++i) {
         	graphics.fillRect(concreteX[i], concreteY[i], CELLSIZE, CELLSIZE);
         }
         
         // draw blocks
-        graphics.setColor(Color.decode("#009900"));
+        graphics.setColor(Color.decode("#005500"));
         for (int i = 0; i < NUM_BLOCKS; ++i) {
         	graphics.fillRect(blockX[i], blockY[i], CELLSIZE, CELLSIZE);
         }
@@ -262,14 +299,11 @@ public class Beast extends JPanel implements ActionListener, KeyListener
         graphics.setColor(Color.decode("#FF0000"));
         for (int i = 0; i < active_enemies; ++i) {
         	if (enemy_alive[i]) {
-        		graphics.fillRect(enemyX[i], enemyY[i], CELLSIZE, CELLSIZE);
+        		graphics.fillRect(enemyX[i] + 8, enemyY[i], 2, CELLSIZE);
+        		graphics.fillRect(enemyX[i] + 22, enemyY[i], 2, CELLSIZE);
+        		graphics.fillRect(enemyX[i] + 8, enemyY[i] + 14, 14, 2);
         	}
-        }        
-        
-        /*graphics.setColor(Color.decode("#009900"));
-        for (int i = 0; i < numAvailablePositions; ++i) {
-        	//graphics.fillRect(avaliable_positions[i][0], avaliable_positions[i][1], CELLSIZE, CELLSIZE);
-        }*/
+        }
         
         // draw text
         graphics.setColor(Color.GRAY);
@@ -279,6 +313,10 @@ public class Beast extends JPanel implements ActionListener, KeyListener
         graphics.drawString("Time: " + "0", 750, windowHeight - 12);
         graphics.drawString("Lives: " + lives, 900, windowHeight - 12);
         graphics.drawString("Score:  " + score, 1050, windowHeight - 12);
+        
+        // setup screen
+        graphics.setColor(Color.BLACK);      
+        graphics.fillRect(0, 0, windowWidth, (int)setupTime);
     }
 
     public void actionPerformed(ActionEvent e) 
