@@ -45,6 +45,9 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     long setupTime = 0;
     boolean settingUpLevel = true;
     
+    int stopwatch = 0;
+    long time;
+    
     // initialize player
     int playerX = -1, playerY = -1;
     int lives = 5;
@@ -56,7 +59,9 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     int[] enemyX = new int[NUM_ENEMIES];
     int[] enemyY = new int[NUM_ENEMIES];
     boolean[] enemy_alive = new boolean[NUM_ENEMIES];
-    long enemyTime;
+    int[] enemy_self_destruct = new int[NUM_ENEMIES];
+    ArrayList<Integer> available_cells_in_ = new ArrayList<Integer>();
+    //ArrayList<ArrayList<Integer>> cells_seen_recently = new ArrayList<ArrayList<Integer>>();
     
     // initialize blocks
     int NUM_BLOCKS = 233; // determined by count from youtube video
@@ -89,10 +94,14 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     }
     
     private void setup_level() {
+    	long startTime = System.currentTimeMillis();
+    	
     	if (level > 0)
     		score += 9 + 4 * level;
     	
     	++level;
+    	
+    	stopwatch = 0;
     	
     	int index = 0;
     	avaliable_positions.clear();
@@ -119,8 +128,10 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     	playerY = pos_.get(1);
         
         // position enemies
-    	active_enemies = 5 + level * 2;
-    	alive_enemies = 5 + level * 2;
+    	//active_enemies = 5 + level * 2;
+    	active_enemies = 1;
+    	//alive_enemies = 5 + level * 2;
+    	alive_enemies = 1;
         for (int i = 0; i < active_enemies; ++i) {
         	ArrayList<Integer> pos = get_available_position();
             enemyX[i] = pos.get(0);
@@ -182,6 +193,41 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     	}
     }
     
+    private void find_reachable_cells(int x, int y, ArrayList<Integer> reachable_cells) {
+		if (reachable_cells.size() > 9) {
+			return;
+		}
+    	int x_check = -1, y_check = -1;
+    	for (int i = 0; i < 8; ++i) {
+    		if (i == 0) { x_check = x - CELLSIZE; y_check = y - CELLSIZE; }
+    		if (i == 1) { x_check = x           ; y_check = y - CELLSIZE; }
+    		if (i == 2) { x_check = x + CELLSIZE; y_check = y - CELLSIZE; }
+    		if (i == 3) { x_check = x + CELLSIZE; y_check = y           ; }
+    		if (i == 4) { x_check = x + CELLSIZE; y_check = y + CELLSIZE; }
+    		if (i == 5) { x_check = x           ; y_check = y + CELLSIZE; }
+    		if (i == 6) { x_check = x - CELLSIZE; y_check = y + CELLSIZE; }
+    		if (i == 7) { x_check = x - CELLSIZE; y_check = y           ; }
+    		//System.out.println("checking:" + (y_check * 38 / CELLSIZE - CELLSIZE) + (x_check / CELLSIZE - CELLSIZE));
+    		if (check_availablity(x_check, y_check)) {
+    			boolean never_seen = true;
+    			for (Integer j : reachable_cells) {
+        			System.out.print(j + "|");     
+    				if (calc_cell_id(x_check, y_check) == j) {
+    					never_seen = false;
+    				}
+    			}
+    			if (never_seen == true) {
+	    			reachable_cells.add(calc_cell_id(x_check, y_check));
+	    			find_reachable_cells(x_check, y_check, reachable_cells);
+    			}
+    		}
+    	}
+    }
+    
+    private int calc_cell_id(int x, int y) {
+    	return (y - CELLSIZE) / CELLSIZE * 38 + (x - CELLSIZE) / CELLSIZE;
+    }
+    
     public void update() {
     	if (settingUpLevel == true) {
     		settingUpLevel = false;
@@ -190,10 +236,28 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     	}
     	
     	// move enemy
-    	if (enemyTime + 1000 < System.currentTimeMillis()) {
-        	enemyTime = System.currentTimeMillis();
+    	if (time + 1000 < System.currentTimeMillis()) {
+        	time = System.currentTimeMillis();
+        	
+        	stopwatch++;
         	
         	for (int i = 0; i < active_enemies; ++i) {
+        		ArrayList<Integer> reachable_cells = new ArrayList<Integer>();
+        		find_reachable_cells(enemyX[i], enemyY[i], reachable_cells);
+            	if (reachable_cells.size() > 9) {
+        			enemy_self_destruct[i] = 10;
+            	} else {
+            		enemy_self_destruct[i]--;
+            		if (enemy_self_destruct[i] == 0) {
+            			enemy_killed(i);
+            		}
+        		}
+            	for (Integer x : reachable_cells) {
+        			System.out.print(x + "|");            		
+            	}
+            	System.out.println("");
+        		System.out.println(reachable_cells.size() + " - " + enemy_self_destruct[i]);
+        		
         	    ArrayList<Integer> potential_movesX = new ArrayList<Integer>();
         	    ArrayList<Integer> potential_movesY = new ArrayList<Integer>();
         	    add_if_available(enemyX[i] - CELLSIZE, enemyY[i] - CELLSIZE, potential_movesX, potential_movesY);
@@ -310,7 +374,7 @@ public class Beast extends JPanel implements ActionListener, KeyListener
         graphics.setFont(new Font("Arial Black", Font.PLAIN, 20));
         graphics.drawString("Beasts: " + alive_enemies, 450, windowHeight - 12);
         graphics.drawString("Level: " + level + "K", 600, windowHeight - 12);
-        graphics.drawString("Time: " + "0", 750, windowHeight - 12);
+        graphics.drawString("Time: " + String.format("%02d", stopwatch / 60) + ":" + String.format("%02d", stopwatch % 60), 750, windowHeight - 12);
         graphics.drawString("Lives: " + lives, 900, windowHeight - 12);
         graphics.drawString("Score:  " + score, 1050, windowHeight - 12);
         
@@ -401,6 +465,7 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     	if (playerLegalMove) {
 			playerX = player_potentialX;
 			playerY = player_potentialY;
+			//System.out.println("moving to:" + playerX + "," + playerY + ", id:" + calc_cell_id(playerX, playerY));
     	}
     }
     
