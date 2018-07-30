@@ -61,7 +61,6 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     boolean[] enemy_alive = new boolean[NUM_ENEMIES];
     int[] enemy_self_destruct = new int[NUM_ENEMIES];
     ArrayList<Integer> available_cells_in_ = new ArrayList<Integer>();
-    //ArrayList<ArrayList<Integer>> cells_seen_recently = new ArrayList<ArrayList<Integer>>();
     
     // initialize blocks
     int NUM_BLOCKS = 233; // determined by count from youtube video
@@ -230,7 +229,6 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     	if (settingUpLevel == true) {
     		settingUpLevel = false;
     		setupTime = System.currentTimeMillis();
-    		//System.out.println("capturing:" + setupTime);
     	}
     	
     	// move enemy
@@ -250,11 +248,6 @@ public class Beast extends JPanel implements ActionListener, KeyListener
             			enemy_killed(i);
             		}
         		}
-            	//for (Integer x : reachable_cells) {
-        			//System.out.print(x + "|");            		
-            	//}
-            	//System.out.println("");
-        		//System.out.println(reachable_cells.size() + " - " + enemy_self_destruct[i]);
         		
         	    ArrayList<Integer> potential_movesX = new ArrayList<Integer>();
         	    ArrayList<Integer> potential_movesY = new ArrayList<Integer>();
@@ -315,7 +308,6 @@ public class Beast extends JPanel implements ActionListener, KeyListener
         
         // draw player
         graphics.setColor(Color.decode("#00FFFF"));
-        //graphics.fillRect(playerX, playerY, CELLSIZE, CELLSIZE);
         graphics.fillRect(playerX + 13, playerY + 2, 1, 26);
         graphics.fillRect(playerX + 12, playerY + 3, 1, 24);
         graphics.fillRect(playerX + 11, playerY + 4, 1, 22);
@@ -463,7 +455,6 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     	if (playerLegalMove) {
 			playerX = player_potentialX;
 			playerY = player_potentialY;
-			//System.out.println("moving to:" + playerX + "," + playerY + ", id:" + calc_cell_id(playerX, playerY));
     	}
     }
     
