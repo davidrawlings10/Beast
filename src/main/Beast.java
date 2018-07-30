@@ -128,10 +128,8 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     	playerY = pos_.get(1);
         
         // position enemies
-    	//active_enemies = 5 + level * 2;
-    	active_enemies = 1;
-    	//alive_enemies = 5 + level * 2;
-    	alive_enemies = 1;
+    	active_enemies = 5 + level * 2;
+    	alive_enemies = 5 + level * 2;
         for (int i = 0; i < active_enemies; ++i) {
         	ArrayList<Integer> pos = get_available_position();
             enemyX[i] = pos.get(0);
@@ -211,7 +209,7 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     		if (check_availablity(x_check, y_check)) {
     			boolean never_seen = true;
     			for (Integer j : reachable_cells) {
-        			System.out.print(j + "|");     
+        			//System.out.print(j + "|");     
     				if (calc_cell_id(x_check, y_check) == j) {
     					never_seen = false;
     				}
@@ -232,7 +230,7 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     	if (settingUpLevel == true) {
     		settingUpLevel = false;
     		setupTime = System.currentTimeMillis();
-    		System.out.println("capturing:" + setupTime);
+    		//System.out.println("capturing:" + setupTime);
     	}
     	
     	// move enemy
@@ -252,11 +250,11 @@ public class Beast extends JPanel implements ActionListener, KeyListener
             			enemy_killed(i);
             		}
         		}
-            	for (Integer x : reachable_cells) {
-        			System.out.print(x + "|");            		
-            	}
-            	System.out.println("");
-        		System.out.println(reachable_cells.size() + " - " + enemy_self_destruct[i]);
+            	//for (Integer x : reachable_cells) {
+        			//System.out.print(x + "|");            		
+            	//}
+            	//System.out.println("");
+        		//System.out.println(reachable_cells.size() + " - " + enemy_self_destruct[i]);
         		
         	    ArrayList<Integer> potential_movesX = new ArrayList<Integer>();
         	    ArrayList<Integer> potential_movesY = new ArrayList<Integer>();
