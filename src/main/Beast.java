@@ -50,7 +50,7 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     
     // initialize player
     int playerX = -1, playerY = -1;
-    int lives = 5;
+    int lives = 3;
     
     // initialize enemies
     int active_enemies = -1; // will be initialized later
@@ -58,6 +58,7 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     int NUM_ENEMIES = 105;
     int[] enemyX = new int[NUM_ENEMIES];
     int[] enemyY = new int[NUM_ENEMIES];
+    int[] enemy_type = new int[NUM_ENEMIES];
     boolean[] enemy_alive = new boolean[NUM_ENEMIES];
     int[] enemy_self_destruct = new int[NUM_ENEMIES];
     ArrayList<Integer> available_cells_in_ = new ArrayList<Integer>();
@@ -127,8 +128,18 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     	playerY = pos_.get(1);
         
         // position enemies
-    	active_enemies = 5 + level * 2;
-    	alive_enemies = 5 + level * 2;
+    	active_enemies = 1 + level * 2;
+    	alive_enemies = 1 + level * 2; 
+    	for (int i = 0; i < active_enemies; ++i) {
+    		if (i < 4 + level / 3) {
+    			enemy_type[i] = 0;
+    		} else {
+    			enemy_type[i] = 1;
+    		}
+    	}
+    	/*active_enemies = 1;
+    	alive_enemies = 1;
+    	enemy_type[0] = 1;*/
         for (int i = 0; i < active_enemies; ++i) {
         	ArrayList<Integer> pos = get_available_position();
             enemyX[i] = pos.get(0);
@@ -183,10 +194,11 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     	return true;
     }
     
-    private void add_if_available(int x, int y, ArrayList<Integer> potential_movesX, ArrayList<Integer> potential_movesY) {
+    private void add_if_available(int x, int y, ArrayList<Integer> potential_movesX, ArrayList<Integer> potential_movesY, ArrayList<Integer> potential_moves_distance) {
     	if (check_availablity(x, y)) {
     		potential_movesX.add(x);
     		potential_movesY.add(y);
+    		potential_moves_distance.add(Math.abs(playerX - x) + Math.abs(playerY - y));
     	}
     }
     
@@ -204,11 +216,9 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     		if (i == 5) { x_check = x           ; y_check = y + CELLSIZE; }
     		if (i == 6) { x_check = x - CELLSIZE; y_check = y + CELLSIZE; }
     		if (i == 7) { x_check = x - CELLSIZE; y_check = y           ; }
-    		//System.out.println("checking:" + (y_check * 38 / CELLSIZE - CELLSIZE) + (x_check / CELLSIZE - CELLSIZE));
     		if (check_availablity(x_check, y_check)) {
     			boolean never_seen = true;
     			for (Integer j : reachable_cells) {
-        			//System.out.print(j + "|");     
     				if (calc_cell_id(x_check, y_check) == j) {
     					never_seen = false;
     				}
@@ -251,18 +261,62 @@ public class Beast extends JPanel implements ActionListener, KeyListener
         		
         	    ArrayList<Integer> potential_movesX = new ArrayList<Integer>();
         	    ArrayList<Integer> potential_movesY = new ArrayList<Integer>();
-        	    add_if_available(enemyX[i] - CELLSIZE, enemyY[i] - CELLSIZE, potential_movesX, potential_movesY);
-        	    add_if_available(enemyX[i] - CELLSIZE, enemyY[i]           , potential_movesX, potential_movesY);
-        	    add_if_available(enemyX[i] - CELLSIZE, enemyY[i] + CELLSIZE, potential_movesX, potential_movesY);
-        	    add_if_available(enemyX[i]           , enemyY[i] - CELLSIZE, potential_movesX, potential_movesY);
-        	    add_if_available(enemyX[i]           , enemyY[i]           , potential_movesX, potential_movesY);
-        	    add_if_available(enemyX[i]           , enemyY[i] + CELLSIZE, potential_movesX, potential_movesY);
-        	    add_if_available(enemyX[i] + CELLSIZE, enemyY[i] - CELLSIZE, potential_movesX, potential_movesY);
-        	    add_if_available(enemyX[i] + CELLSIZE, enemyY[i]           , potential_movesX, potential_movesY);
-        	    add_if_available(enemyX[i] + CELLSIZE, enemyY[i] + CELLSIZE, potential_movesX, potential_movesY);
+        	    ArrayList<Integer> potential_moves_distance = new ArrayList<Integer>();
+        	    add_if_available(enemyX[i] - CELLSIZE, enemyY[i] - CELLSIZE, potential_movesX, potential_movesY, potential_moves_distance);
+        	    add_if_available(enemyX[i] - CELLSIZE, enemyY[i]           , potential_movesX, potential_movesY, potential_moves_distance);
+        	    add_if_available(enemyX[i] - CELLSIZE, enemyY[i] + CELLSIZE, potential_movesX, potential_movesY, potential_moves_distance);
+        	    add_if_available(enemyX[i]           , enemyY[i] - CELLSIZE, potential_movesX, potential_movesY, potential_moves_distance);
+        	    add_if_available(enemyX[i]           , enemyY[i]           , potential_movesX, potential_movesY, potential_moves_distance);
+        	    add_if_available(enemyX[i]           , enemyY[i] + CELLSIZE, potential_movesX, potential_movesY, potential_moves_distance);
+        	    add_if_available(enemyX[i] + CELLSIZE, enemyY[i] - CELLSIZE, potential_movesX, potential_movesY, potential_moves_distance);
+        	    add_if_available(enemyX[i] + CELLSIZE, enemyY[i]           , potential_movesX, potential_movesY, potential_moves_distance);
+        	    add_if_available(enemyX[i] + CELLSIZE, enemyY[i] + CELLSIZE, potential_movesX, potential_movesY, potential_moves_distance);
         	    if (potential_movesX.size() == 0)
         	    	continue;
-        	    int chosen_index = rand.nextInt(potential_movesX.size());    	    
+        	    // if the enemy is a super beast but sometimes just screw it
+        	    int distance_from_player = Math.abs(playerX - enemyX[i]) + Math.abs(playerY - enemyY[i]);
+        	    if (enemy_type[i] == 1 && rand.nextInt(10) != 0 && distance_from_player < 300 && distance_from_player != 30) {
+	        	    ArrayList<Integer> indexesToRemove = new ArrayList<Integer>();
+	        	    //System.out.println("size before:" + potential_movesX.size());
+	        	    for (int j = 0; j < potential_movesX.size(); ++j) {
+	        	    	boolean openUp    = check_availablity(potential_movesX.get(j)           , potential_movesY.get(j) - CELLSIZE);
+	        	    	boolean openDown  = check_availablity(potential_movesX.get(j)           , potential_movesY.get(j) + CELLSIZE);
+	        	    	boolean openLeft  = check_availablity(potential_movesX.get(j) - CELLSIZE, potential_movesY.get(j)           );
+	        	    	boolean openRight = check_availablity(potential_movesX.get(j) + CELLSIZE, potential_movesY.get(j)           );
+	        	    	if (!openUp && !openDown || !openLeft && !openRight) {
+	        	    		indexesToRemove.add(j);
+	        	    		//System.out.println("removing...A" + j);
+	        	    	}
+	            	    potential_moves_distance.set(j, Math.abs(playerX - potential_movesX.get(j)) + Math.abs(playerY - potential_movesY.get(j)));
+	        	    }
+	        	    //System.out.println("indexesToRemove:" + indexesToRemove.size());
+	        	    for (int j = indexesToRemove.size() - 1; j >= 0; --j) {
+	        	    	int index= indexesToRemove.get(j);
+	        	    	if (potential_movesX.size() > 1) {
+	        	    		potential_movesX.remove(index);
+	        	    		potential_movesY.remove(index);
+	        	    		potential_moves_distance.remove(index);
+	        	    	}
+	    	    		//System.out.println("removing...B" + indexesToRemove.get(j) + "..." + j);
+	        	    }
+        	    }
+        	    //potential_movesX.remove(0);
+        	    //System.out.println("size after:" + potential_movesX.size());
+        	    //System.out.println("");
+        	    int chosen_index = -1;
+        	    if (enemy_type[i] == 1) {
+        	    	int min_distance = 10000;
+        	    	int index = -1;
+	        	    for (int j = 0; j < potential_moves_distance.size(); ++j) {
+	        	    	if (potential_moves_distance.get(j) < min_distance) {
+	        	    		min_distance = potential_moves_distance.get(j);
+	        	    		index = j;
+	        	    	}
+	        	    }
+	        	    chosen_index = index;
+        	    } else {
+        	    	chosen_index = rand.nextInt(potential_movesX.size());
+        	    }
         	    int chosenX = potential_movesX.get(chosen_index);
         	    int chosenY = potential_movesY.get(chosen_index);
         		enemyX[i] = chosenX;
@@ -353,9 +407,17 @@ public class Beast extends JPanel implements ActionListener, KeyListener
         graphics.setColor(Color.decode("#FF0000"));
         for (int i = 0; i < active_enemies; ++i) {
         	if (enemy_alive[i]) {
-        		graphics.fillRect(enemyX[i] + 8, enemyY[i], 2, CELLSIZE);
-        		graphics.fillRect(enemyX[i] + 22, enemyY[i], 2, CELLSIZE);
-        		graphics.fillRect(enemyX[i] + 8, enemyY[i] + 14, 14, 2);
+        		if (enemy_type[i] == 0) {
+	        		graphics.fillRect(enemyX[i] + 7, enemyY[i], 2, CELLSIZE);
+	        		graphics.fillRect(enemyX[i] + 23, enemyY[i], 2, CELLSIZE);
+	        		graphics.fillRect(enemyX[i] + 7, enemyY[i] + 14, 16, 2);
+        		} else {
+	        		graphics.fillRect(enemyX[i] + 7, enemyY[i], 2, CELLSIZE);
+	        		graphics.fillRect(enemyX[i] + 11, enemyY[i], 2, CELLSIZE);
+	        		graphics.fillRect(enemyX[i] + 19, enemyY[i], 2, CELLSIZE);
+	        		graphics.fillRect(enemyX[i] + 23, enemyY[i], 2, CELLSIZE);
+	        		graphics.fillRect(enemyX[i] + 11, enemyY[i] + 14, 8, 2);
+        		}
         	}
         }
         
@@ -369,8 +431,8 @@ public class Beast extends JPanel implements ActionListener, KeyListener
         graphics.drawString("Score:  " + score, 1050, windowHeight - 12);
         
         // setup screen
-        graphics.setColor(Color.BLACK);      
-        graphics.fillRect(0, 0, windowWidth, (int)setupTime);
+        //graphics.setColor(Color.BLACK);      
+        //graphics.fillRect(0, 0, windowWidth, (int)setupTime);
     }
 
     public void actionPerformed(ActionEvent e) 
