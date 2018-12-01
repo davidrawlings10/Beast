@@ -235,9 +235,8 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     	return (y - CELLSIZE) / CELLSIZE * 38 + (x - CELLSIZE) / CELLSIZE;
     }
     
-    public void update() {
+    public void update() {    	
     	if (settingUpLevel == true) {
-    		settingUpLevel = false;
     		setupTime = System.currentTimeMillis();
     	}
     	
@@ -515,8 +514,12 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     		}
     	}
     	if (playerLegalMove) {
-			playerX = player_potentialX;
-			playerY = player_potentialY;
+    		if (!settingUpLevel) {    		
+				playerX = player_potentialX;
+				playerY = player_potentialY;
+    		} else {
+    			settingUpLevel = false;
+    		}
     	}
     }
     
@@ -525,7 +528,7 @@ public class Beast extends JPanel implements ActionListener, KeyListener
 		alive_enemies--;
 		score += 2;
 		if (alive_enemies == 0)
-			setup_level();    	
+			setup_level();
     }
     
     private Integer findNextEmptyPositionY(int index, int x, int y) {
