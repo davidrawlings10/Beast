@@ -94,6 +94,8 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     }
     
     private void setup_level() {
+    	settingUpLevel = true;
+    	
     	long startTime = System.currentTimeMillis();
     	
     	if (level > 0)
@@ -513,11 +515,13 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     			}
     		}
     	}
-    	if (playerLegalMove) {
-    		if (!settingUpLevel) {    		
+		if (playerLegalMove) {
+    		if (!settingUpLevel) {    	
+    			System.out.println("moving player");
 				playerX = player_potentialX;
 				playerY = player_potentialY;
     		} else {
+    			System.out.println("NOT MOVING PLAYER");
     			settingUpLevel = false;
     		}
     	}
