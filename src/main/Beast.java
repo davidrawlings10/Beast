@@ -139,9 +139,6 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     			enemy_type[i] = 1;
     		}
     	}
-    	/*active_enemies = 1;
-    	alive_enemies = 1;
-    	enemy_type[0] = 1;*/
         for (int i = 0; i < active_enemies; ++i) {
         	ArrayList<Integer> pos = get_available_position();
             enemyX[i] = pos.get(0);
@@ -286,11 +283,9 @@ public class Beast extends JPanel implements ActionListener, KeyListener
 	        	    	boolean openRight = check_availablity(potential_movesX.get(j) + CELLSIZE, potential_movesY.get(j)           );
 	        	    	if (!openUp && !openDown || !openLeft && !openRight) {
 	        	    		indexesToRemove.add(j);
-	        	    		//System.out.println("removing...A" + j);
 	        	    	}
 	            	    potential_moves_distance.set(j, Math.abs(playerX - potential_movesX.get(j)) + Math.abs(playerY - potential_movesY.get(j)));
 	        	    }
-	        	    //System.out.println("indexesToRemove:" + indexesToRemove.size());
 	        	    for (int j = indexesToRemove.size() - 1; j >= 0; --j) {
 	        	    	int index= indexesToRemove.get(j);
 	        	    	if (potential_movesX.size() > 1) {
@@ -298,12 +293,8 @@ public class Beast extends JPanel implements ActionListener, KeyListener
 	        	    		potential_movesY.remove(index);
 	        	    		potential_moves_distance.remove(index);
 	        	    	}
-	    	    		//System.out.println("removing...B" + indexesToRemove.get(j) + "..." + j);
 	        	    }
         	    }
-        	    //potential_movesX.remove(0);
-        	    //System.out.println("size after:" + potential_movesX.size());
-        	    //System.out.println("");
         	    int chosen_index = -1;
         	    if (enemy_type[i] == 1) {
         	    	int min_distance = 10000;
@@ -516,12 +507,10 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     		}
     	}
 		if (playerLegalMove) {
-    		if (!settingUpLevel) {    	
-    			System.out.println("moving player");
+    		if (!settingUpLevel) {
 				playerX = player_potentialX;
 				playerY = player_potentialY;
     		} else {
-    			System.out.println("NOT MOVING PLAYER");
     			settingUpLevel = false;
     		}
     	}

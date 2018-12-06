@@ -28,18 +28,7 @@ public class Main
 	    // Final configuration settings for frame.
 	    frmMain.setVisible(true);
 	    frmMain.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	    frmMain.setTitle("Beast");
-	    
-	    /*
-	    
-	    ArrayList<Integer> al2 = new ArrayList<Integer>();
-	    //add method for integer ArrayList
-	    al2.add(1);
-	    al2.add(34);
-	    al2.add(99);
-	    al2.add(99);
-	    al2.add(78);*/
-	    
+	    frmMain.setTitle("Beast");	   
 	    
 	    while (true) {
 	    	beast.update();
