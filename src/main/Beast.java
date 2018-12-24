@@ -19,9 +19,9 @@ import javax.swing.Timer;
 public class Beast extends JPanel implements ActionListener, KeyListener
 {
     public enum Direction {
-    	UP, DOWN, LEFT, RIGHT
+        UP, DOWN, LEFT, RIGHT
     }
-	
+    
     Timer shapeTimer = new Timer(5, this);
     Random rand = new Random();
 
@@ -43,7 +43,7 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     int score = 0;
     
     long setupTime = 0;
-    boolean settingUpLevel = true;
+    boolean cancelPlayerMovement = false;
     
     int stopwatch = 0;
     long time;
@@ -51,6 +51,7 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     // initialize player
     int playerX = -1, playerY = -1;
     int lives = 3;
+    final int PLAYER_BUBBLE = 8;
     
     // initialize enemies
     int active_enemies = -1; // will be initialized later
@@ -94,250 +95,259 @@ public class Beast extends JPanel implements ActionListener, KeyListener
     }
     
     private void setup_level() {
-    	settingUpLevel = true;
-    	
-    	long startTime = System.currentTimeMillis();
-    	
-    	if (level > 0)
-    		score += 9 + 4 * level;
-    	
-    	++level;
-    	
-    	stopwatch = 0;
-    	
-    	int index = 0;
-    	avaliable_positions.clear();
+        long startTime = System.currentTimeMillis();
+        
+        if (level > 0)
+            score += 9 + 4 * level;
+        
+        ++level;
+        
+        stopwatch = 0;
+        
+        int index = 0;
+        avaliable_positions.clear();
         for (int i = 0; i < boardWidth; ++i) {
-        	for (int j = 0; j < boardHeight - 1; ++j) {
-        		
-        		ArrayList<Integer> pos = new ArrayList<Integer>();
-        		pos.add(i * CELLSIZE + CELLSIZE);
-        		pos.add(j * CELLSIZE + CELLSIZE);
-        		avaliable_positions.add(pos);
-        		
-        		index++;
-        	}
+            for (int j = 0; j < boardHeight - 1; ++j) {
+                
+                ArrayList<Integer> pos = new ArrayList<Integer>();
+                pos.add(i * CELLSIZE + CELLSIZE);
+                pos.add(j * CELLSIZE + CELLSIZE);
+                avaliable_positions.add(pos);
+                
+                index++;
+            }
         }
         numAvailablePositions = 760;
         if (index != numAvailablePositions) {
-        	System.out.println("WARNING: assignment index did not match numAvailablePositions");
-        	System.out.println("index: "+index);
-        	System.out.println("numAvailablePositions: "+numAvailablePositions);
-        }
-        
-    	ArrayList<Integer> pos_ = get_available_position();
-        playerX = pos_.get(0);
-    	playerY = pos_.get(1);
-        
-        // position enemies
-    	active_enemies = 1 + level * 2;
-    	alive_enemies = 1 + level * 2; 
-    	for (int i = 0; i < active_enemies; ++i) {
-    		if (i < 4 + level / 3) {
-    			enemy_type[i] = 0;
-    		} else {
-    			enemy_type[i] = 1;
-    		}
-    	}
-        for (int i = 0; i < active_enemies; ++i) {
-        	ArrayList<Integer> pos = get_available_position();
-            enemyX[i] = pos.get(0);
-        	enemyY[i] = pos.get(1);
-        	enemy_alive[i] = true;
-        }
-        
+            System.out.println("WARNING: assignment index did not match numAvailablePositions");
+            System.out.println("index: "+index);
+            System.out.println("numAvailablePositions: "+numAvailablePositions);
+        }       
+          
         // position blocks
         for (int i = 0; i < NUM_BLOCKS; ++i) {
-        	ArrayList<Integer> pos = get_available_position();
+            ArrayList<Integer> pos = get_available_position(false);
             blockX[i] = pos.get(0);
-        	blockY[i] = pos.get(1);
+            blockY[i] = pos.get(1);
         }
         
         // position concretes
         for (int i = 0; i < active_concretes; ++i) {
-        	ArrayList<Integer> pos = get_available_position();
+            ArrayList<Integer> pos = get_available_position(false);
             concreteX[i] = pos.get(0);
-        	concreteY[i] = pos.get(1);
+            concreteY[i] = pos.get(1);
+        }
+        
+        ArrayList<Integer> pos_ = get_available_position(true);
+        playerX = pos_.get(0);
+        playerY = pos_.get(1);
+        
+        // position enemies        
+        active_enemies = 1 + level * 2;
+        alive_enemies = 1 + level * 2;        
+        
+        for (int i = 0; i < active_enemies; ++i) {
+            if (i < 4 + level / 3) {
+                enemy_type[i] = 0;
+            } else {
+                enemy_type[i] = 1;
+            }
+        }
+        for (int i = 0; i < active_enemies; ++i) {
+            ArrayList<Integer> pos = get_available_position(false);
+            enemyX[i] = pos.get(0);
+            enemyY[i] = pos.get(1);
+            enemy_alive[i] = true;
         }
     }
     
-    private ArrayList<Integer> get_available_position() {
-    	int randomIndex = rand.nextInt(numAvailablePositions); // bug here relating to WARNING: assignment index did not match numAvailablePositions
-    	ArrayList<Integer> pos = new ArrayList<Integer>();
-    	pos.add(avaliable_positions.get(randomIndex).get(0));
-    	pos.add(avaliable_positions.get(randomIndex).get(1));
-    	avaliable_positions.remove(randomIndex);
-    	numAvailablePositions--;
-    	return pos;
+    private ArrayList<Integer> get_available_position(boolean positioningPlayer) {
+        int randomIndex = rand.nextInt(numAvailablePositions); // bug here relating to WARNING: assignment index did not match numAvailablePositions
+        ArrayList<Integer> pos = new ArrayList<Integer>();
+        pos.add(avaliable_positions.get(randomIndex).get(0));
+        pos.add(avaliable_positions.get(randomIndex).get(1));
+        avaliable_positions.remove(randomIndex);
+        numAvailablePositions--;
+        if (positioningPlayer == true) {
+            for (int i = numAvailablePositions - 1; i >= 0; --i) {
+                int x = avaliable_positions.get(i).get(0);
+                int y = avaliable_positions.get(i).get(1);
+                if (pos.get(0) + CELLSIZE * PLAYER_BUBBLE > x && pos.get(0) - CELLSIZE * PLAYER_BUBBLE < x &&
+                    pos.get(1) + CELLSIZE * PLAYER_BUBBLE > y && pos.get(1) - CELLSIZE * PLAYER_BUBBLE < y) {
+                    avaliable_positions.remove(i);
+                    numAvailablePositions--;
+                }
+            }
+        }
+        return pos;
     }
     
     private boolean check_availablity(int x, int y) {
-    	if (x < CELLSIZE || y < CELLSIZE || x > CELLSIZE * boardWidth || y > CELLSIZE * (boardHeight - 1)) {
-    		return false;
-    	}
-    	for (int i = 0; i < NUM_BLOCKS; ++i) {
-    		if (blockX[i] == x && blockY[i] == y) {
-    			return false;
-    		}
-    	}
-    	for (int i = 0; i < active_concretes; ++i) {
-    		if (concreteX[i] == x && concreteY[i] == y) {
-    			return false;
-    		}
-    	}
-    	for (int i = 0; i < active_enemies; ++i) {
-    		if (enemyX[i] == x && enemyY[i] == y) {
-    			return false;
-    		}
-    	}
-    	return true;
+        if (x < CELLSIZE || y < CELLSIZE || x > CELLSIZE * boardWidth || y > CELLSIZE * (boardHeight - 1)) {
+            return false;
+        }
+        for (int i = 0; i < NUM_BLOCKS; ++i) {
+            if (blockX[i] == x && blockY[i] == y) {
+                return false;
+            }
+        }
+        for (int i = 0; i < active_concretes; ++i) {
+            if (concreteX[i] == x && concreteY[i] == y) {
+                return false;
+            }
+        }
+        for (int i = 0; i < active_enemies; ++i) {
+            if (enemyX[i] == x && enemyY[i] == y) {
+                return false;
+            }
+        }
+        return true;
     }
     
     private void add_if_available(int x, int y, ArrayList<Integer> potential_movesX, ArrayList<Integer> potential_movesY, ArrayList<Integer> potential_moves_distance) {
-    	if (check_availablity(x, y)) {
-    		potential_movesX.add(x);
-    		potential_movesY.add(y);
-    		potential_moves_distance.add(Math.abs(playerX - x) + Math.abs(playerY - y));
-    	}
+        if (check_availablity(x, y)) {
+            potential_movesX.add(x);
+            potential_movesY.add(y);
+            potential_moves_distance.add(Math.abs(playerX - x) + Math.abs(playerY - y));
+        }
     }
     
     private void find_reachable_cells(int x, int y, ArrayList<Integer> reachable_cells) {
-		if (reachable_cells.size() > 9) {
-			return;
-		}
-    	int x_check = -1, y_check = -1;
-    	for (int i = 0; i < 8; ++i) {
-    		if (i == 0) { x_check = x - CELLSIZE; y_check = y - CELLSIZE; }
-    		if (i == 1) { x_check = x           ; y_check = y - CELLSIZE; }
-    		if (i == 2) { x_check = x + CELLSIZE; y_check = y - CELLSIZE; }
-    		if (i == 3) { x_check = x + CELLSIZE; y_check = y           ; }
-    		if (i == 4) { x_check = x + CELLSIZE; y_check = y + CELLSIZE; }
-    		if (i == 5) { x_check = x           ; y_check = y + CELLSIZE; }
-    		if (i == 6) { x_check = x - CELLSIZE; y_check = y + CELLSIZE; }
-    		if (i == 7) { x_check = x - CELLSIZE; y_check = y           ; }
-    		if (check_availablity(x_check, y_check)) {
-    			boolean never_seen = true;
-    			for (Integer j : reachable_cells) {
-    				if (calc_cell_id(x_check, y_check) == j) {
-    					never_seen = false;
-    				}
-    			}
-    			if (never_seen == true) {
-	    			reachable_cells.add(calc_cell_id(x_check, y_check));
-	    			find_reachable_cells(x_check, y_check, reachable_cells);
-    			}
-    		}
-    	}
+        if (reachable_cells.size() > 9) {
+            return;
+        }
+        int x_check = -1, y_check = -1;
+        for (int i = 0; i < 8; ++i) {
+            if (i == 0) { x_check = x - CELLSIZE; y_check = y - CELLSIZE; }
+            if (i == 1) { x_check = x           ; y_check = y - CELLSIZE; }
+            if (i == 2) { x_check = x + CELLSIZE; y_check = y - CELLSIZE; }
+            if (i == 3) { x_check = x + CELLSIZE; y_check = y           ; }
+            if (i == 4) { x_check = x + CELLSIZE; y_check = y + CELLSIZE; }
+            if (i == 5) { x_check = x           ; y_check = y + CELLSIZE; }
+            if (i == 6) { x_check = x - CELLSIZE; y_check = y + CELLSIZE; }
+            if (i == 7) { x_check = x - CELLSIZE; y_check = y           ; }
+            if (check_availablity(x_check, y_check)) {
+                boolean never_seen = true;
+                for (Integer j : reachable_cells) {
+                    if (calc_cell_id(x_check, y_check) == j) {
+                        never_seen = false;
+                    }
+                }
+                if (never_seen == true) {
+                    reachable_cells.add(calc_cell_id(x_check, y_check));
+                    find_reachable_cells(x_check, y_check, reachable_cells);
+                }
+            }
+        }
     }
     
     private int calc_cell_id(int x, int y) {
-    	return (y - CELLSIZE) / CELLSIZE * 38 + (x - CELLSIZE) / CELLSIZE;
+        return (y - CELLSIZE) / CELLSIZE * 38 + (x - CELLSIZE) / CELLSIZE;
     }
     
-    public void update() {    	
-    	if (settingUpLevel == true) {
-    		setupTime = System.currentTimeMillis();
-    	}
-    	
-    	// move enemy
-    	if (time + 1000 < System.currentTimeMillis()) {
-        	time = System.currentTimeMillis();
-        	
-        	stopwatch++;
-        	
-        	for (int i = 0; i < active_enemies; ++i) {
-        		ArrayList<Integer> reachable_cells = new ArrayList<Integer>();
-        		find_reachable_cells(enemyX[i], enemyY[i], reachable_cells);
-            	if (reachable_cells.size() > 9) {
-        			enemy_self_destruct[i] = 10;
-            	} else {
-            		enemy_self_destruct[i]--;
-            		if (enemy_self_destruct[i] == 0) {
-            			enemy_killed(i);
-            		}
-        		}
-        		
-        	    ArrayList<Integer> potential_movesX = new ArrayList<Integer>();
-        	    ArrayList<Integer> potential_movesY = new ArrayList<Integer>();
-        	    ArrayList<Integer> potential_moves_distance = new ArrayList<Integer>();
-        	    add_if_available(enemyX[i] - CELLSIZE, enemyY[i] - CELLSIZE, potential_movesX, potential_movesY, potential_moves_distance);
-        	    add_if_available(enemyX[i] - CELLSIZE, enemyY[i]           , potential_movesX, potential_movesY, potential_moves_distance);
-        	    add_if_available(enemyX[i] - CELLSIZE, enemyY[i] + CELLSIZE, potential_movesX, potential_movesY, potential_moves_distance);
-        	    add_if_available(enemyX[i]           , enemyY[i] - CELLSIZE, potential_movesX, potential_movesY, potential_moves_distance);
-        	    add_if_available(enemyX[i]           , enemyY[i]           , potential_movesX, potential_movesY, potential_moves_distance);
-        	    add_if_available(enemyX[i]           , enemyY[i] + CELLSIZE, potential_movesX, potential_movesY, potential_moves_distance);
-        	    add_if_available(enemyX[i] + CELLSIZE, enemyY[i] - CELLSIZE, potential_movesX, potential_movesY, potential_moves_distance);
-        	    add_if_available(enemyX[i] + CELLSIZE, enemyY[i]           , potential_movesX, potential_movesY, potential_moves_distance);
-        	    add_if_available(enemyX[i] + CELLSIZE, enemyY[i] + CELLSIZE, potential_movesX, potential_movesY, potential_moves_distance);
-        	    if (potential_movesX.size() == 0)
-        	    	continue;
-        	    // if the enemy is a super beast but sometimes just screw it
-        	    int distance_from_player = Math.abs(playerX - enemyX[i]) + Math.abs(playerY - enemyY[i]);
-        	    if (enemy_type[i] == 1 && rand.nextInt(10) != 0 && distance_from_player < 300 && distance_from_player != 30) {
-	        	    ArrayList<Integer> indexesToRemove = new ArrayList<Integer>();
-	        	    //System.out.println("size before:" + potential_movesX.size());
-	        	    for (int j = 0; j < potential_movesX.size(); ++j) {
-	        	    	boolean openUp    = check_availablity(potential_movesX.get(j)           , potential_movesY.get(j) - CELLSIZE);
-	        	    	boolean openDown  = check_availablity(potential_movesX.get(j)           , potential_movesY.get(j) + CELLSIZE);
-	        	    	boolean openLeft  = check_availablity(potential_movesX.get(j) - CELLSIZE, potential_movesY.get(j)           );
-	        	    	boolean openRight = check_availablity(potential_movesX.get(j) + CELLSIZE, potential_movesY.get(j)           );
-	        	    	if (!openUp && !openDown || !openLeft && !openRight) {
-	        	    		indexesToRemove.add(j);
-	        	    	}
-	            	    potential_moves_distance.set(j, Math.abs(playerX - potential_movesX.get(j)) + Math.abs(playerY - potential_movesY.get(j)));
-	        	    }
-	        	    for (int j = indexesToRemove.size() - 1; j >= 0; --j) {
-	        	    	int index= indexesToRemove.get(j);
-	        	    	if (potential_movesX.size() > 1) {
-	        	    		potential_movesX.remove(index);
-	        	    		potential_movesY.remove(index);
-	        	    		potential_moves_distance.remove(index);
-	        	    	}
-	        	    }
-        	    }
-        	    int chosen_index = -1;
-        	    if (enemy_type[i] == 1) {
-        	    	int min_distance = 10000;
-        	    	int index = -1;
-	        	    for (int j = 0; j < potential_moves_distance.size(); ++j) {
-	        	    	if (potential_moves_distance.get(j) < min_distance) {
-	        	    		min_distance = potential_moves_distance.get(j);
-	        	    		index = j;
-	        	    	}
-	        	    }
-	        	    chosen_index = index;
-        	    } else {
-        	    	chosen_index = rand.nextInt(potential_movesX.size());
-        	    }
-        	    int chosenX = potential_movesX.get(chosen_index);
-        	    int chosenY = potential_movesY.get(chosen_index);
-        		enemyX[i] = chosenX;
-        		enemyY[i] = chosenY;
-        	}
-        	repaint();
-    	}
-    	
-    	// check if player collides with enemy
-    	for (int i = 0; i < active_enemies; ++i) {
-			if (!enemy_alive[i])
-				continue;
-	    	if (playerX == enemyX[i] && playerY == enemyY[i]) {
-	    		lives--;
-	    		if (lives == 0) { playerX = 2000; }
-    			while (true) {
-    				playerX = rand.nextInt(boardWidth) * CELLSIZE + CELLSIZE;
-    				playerY = rand.nextInt(boardHeight - 1) * CELLSIZE + CELLSIZE;
-    				if (lives > 0) {
-    					if (check_availablity(playerX, playerY))
-    						break;
-    				}
-    			}
-	    	}
-    	}
+    public void update() {      
+        if (cancelPlayerMovement == true) {
+            setupTime = System.currentTimeMillis();
+        }
+        
+        // move enemy
+        if (time + 1000 < System.currentTimeMillis()) {
+            time = System.currentTimeMillis();
+            
+            stopwatch++;
+            
+            for (int i = 0; i < active_enemies; ++i) {
+                ArrayList<Integer> reachable_cells = new ArrayList<Integer>();
+                find_reachable_cells(enemyX[i], enemyY[i], reachable_cells);
+                if (reachable_cells.size() > 9) {
+                    enemy_self_destruct[i] = 10;
+                } else {
+                    enemy_self_destruct[i]--;
+                    if (enemy_self_destruct[i] == 0) {
+                        enemy_killed(i);
+                    }
+                }
+                
+                ArrayList<Integer> potential_movesX = new ArrayList<Integer>();
+                ArrayList<Integer> potential_movesY = new ArrayList<Integer>();
+                ArrayList<Integer> potential_moves_distance = new ArrayList<Integer>();
+                add_if_available(enemyX[i] - CELLSIZE, enemyY[i] - CELLSIZE, potential_movesX, potential_movesY, potential_moves_distance);
+                add_if_available(enemyX[i] - CELLSIZE, enemyY[i]           , potential_movesX, potential_movesY, potential_moves_distance);
+                add_if_available(enemyX[i] - CELLSIZE, enemyY[i] + CELLSIZE, potential_movesX, potential_movesY, potential_moves_distance);
+                add_if_available(enemyX[i]           , enemyY[i] - CELLSIZE, potential_movesX, potential_movesY, potential_moves_distance);
+                add_if_available(enemyX[i]           , enemyY[i]           , potential_movesX, potential_movesY, potential_moves_distance);
+                add_if_available(enemyX[i]           , enemyY[i] + CELLSIZE, potential_movesX, potential_movesY, potential_moves_distance);
+                add_if_available(enemyX[i] + CELLSIZE, enemyY[i] - CELLSIZE, potential_movesX, potential_movesY, potential_moves_distance);
+                add_if_available(enemyX[i] + CELLSIZE, enemyY[i]           , potential_movesX, potential_movesY, potential_moves_distance);
+                add_if_available(enemyX[i] + CELLSIZE, enemyY[i] + CELLSIZE, potential_movesX, potential_movesY, potential_moves_distance);
+                if (potential_movesX.size() == 0)
+                    continue;
+                // if the enemy is a super beast but sometimes just screw it
+                int distance_from_player = Math.abs(playerX - enemyX[i]) + Math.abs(playerY - enemyY[i]);
+                if (enemy_type[i] == 1 && rand.nextInt(10) != 0 && distance_from_player < 300 && distance_from_player != 30) {
+                    ArrayList<Integer> indexesToRemove = new ArrayList<Integer>();
+                    for (int j = 0; j < potential_movesX.size(); ++j) {
+                        boolean openUp    = check_availablity(potential_movesX.get(j)           , potential_movesY.get(j) - CELLSIZE);
+                        boolean openDown  = check_availablity(potential_movesX.get(j)           , potential_movesY.get(j) + CELLSIZE);
+                        boolean openLeft  = check_availablity(potential_movesX.get(j) - CELLSIZE, potential_movesY.get(j)           );
+                        boolean openRight = check_availablity(potential_movesX.get(j) + CELLSIZE, potential_movesY.get(j)           );
+                        if (!openUp && !openDown || !openLeft && !openRight) {
+                            indexesToRemove.add(j);
+                        }
+                        potential_moves_distance.set(j, Math.abs(playerX - potential_movesX.get(j)) + Math.abs(playerY - potential_movesY.get(j)));
+                    }
+                    for (int j = indexesToRemove.size() - 1; j >= 0; --j) {
+                        int index= indexesToRemove.get(j);
+                        if (potential_movesX.size() > 1) {
+                            potential_movesX.remove(index);
+                            potential_movesY.remove(index);
+                            potential_moves_distance.remove(index);
+                        }
+                    }
+                }
+                int chosen_index = -1;
+                if (enemy_type[i] == 1) {
+                    int min_distance = 10000;
+                    int index = -1;
+                    for (int j = 0; j < potential_moves_distance.size(); ++j) {
+                        if (potential_moves_distance.get(j) < min_distance) {
+                            min_distance = potential_moves_distance.get(j);
+                            index = j;
+                        }
+                    }
+                    chosen_index = index;
+                } else {
+                    chosen_index = rand.nextInt(potential_movesX.size());
+                }
+                int chosenX = potential_movesX.get(chosen_index);
+                int chosenY = potential_movesY.get(chosen_index);
+                enemyX[i] = chosenX;
+                enemyY[i] = chosenY;
+            }
+            repaint();
+        }
+        
+        // check if player collides with enemy
+        for (int i = 0; i < active_enemies; ++i) {
+            if (!enemy_alive[i])
+                continue;
+            if (playerX == enemyX[i] && playerY == enemyY[i]) {
+                lives--;
+                if (lives == 0) { playerX = 2000; }
+                while (true) {
+                    playerX = rand.nextInt(boardWidth) * CELLSIZE + CELLSIZE;
+                    playerY = rand.nextInt(boardHeight - 1) * CELLSIZE + CELLSIZE;
+                    if (lives > 0) {
+                        if (check_availablity(playerX, playerY))
+                            break;
+                    }
+                }
+            }
+        }
     }
 
     public void paintComponent(Graphics g) 
-    {	
+    {   
         super.paintComponent(g);
         Graphics2D graphics = (Graphics2D) g;
         
@@ -384,33 +394,33 @@ public class Beast extends JPanel implements ActionListener, KeyListener
         
         
         // draw concretes
-    	graphics.setColor(Color.decode("#DDDD00"));
+        graphics.setColor(Color.decode("#DDDD00"));
         for (int i = 0; i < active_concretes; ++i) {
-        	graphics.fillRect(concreteX[i], concreteY[i], CELLSIZE, CELLSIZE);
+            graphics.fillRect(concreteX[i], concreteY[i], CELLSIZE, CELLSIZE);
         }
         
         // draw blocks
         graphics.setColor(Color.decode("#005500"));
         for (int i = 0; i < NUM_BLOCKS; ++i) {
-        	graphics.fillRect(blockX[i], blockY[i], CELLSIZE, CELLSIZE);
+            graphics.fillRect(blockX[i], blockY[i], CELLSIZE, CELLSIZE);
         }
         
         // draw enemies       
         graphics.setColor(Color.decode("#FF0000"));
         for (int i = 0; i < active_enemies; ++i) {
-        	if (enemy_alive[i]) {
-        		if (enemy_type[i] == 0) {
-	        		graphics.fillRect(enemyX[i] + 7, enemyY[i], 2, CELLSIZE);
-	        		graphics.fillRect(enemyX[i] + 23, enemyY[i], 2, CELLSIZE);
-	        		graphics.fillRect(enemyX[i] + 7, enemyY[i] + 14, 16, 2);
-        		} else {
-	        		graphics.fillRect(enemyX[i] + 7, enemyY[i], 2, CELLSIZE);
-	        		graphics.fillRect(enemyX[i] + 11, enemyY[i], 2, CELLSIZE);
-	        		graphics.fillRect(enemyX[i] + 19, enemyY[i], 2, CELLSIZE);
-	        		graphics.fillRect(enemyX[i] + 23, enemyY[i], 2, CELLSIZE);
-	        		graphics.fillRect(enemyX[i] + 11, enemyY[i] + 14, 8, 2);
-        		}
-        	}
+            if (enemy_alive[i]) {
+                if (enemy_type[i] == 0) {
+                    graphics.fillRect(enemyX[i] + 7, enemyY[i], 2, CELLSIZE);
+                    graphics.fillRect(enemyX[i] + 23, enemyY[i], 2, CELLSIZE);
+                    graphics.fillRect(enemyX[i] + 7, enemyY[i] + 14, 16, 2);
+                } else {
+                    graphics.fillRect(enemyX[i] + 7, enemyY[i], 2, CELLSIZE);
+                    graphics.fillRect(enemyX[i] + 11, enemyY[i], 2, CELLSIZE);
+                    graphics.fillRect(enemyX[i] + 19, enemyY[i], 2, CELLSIZE);
+                    graphics.fillRect(enemyX[i] + 23, enemyY[i], 2, CELLSIZE);
+                    graphics.fillRect(enemyX[i] + 11, enemyY[i] + 14, 8, 2);
+                }
+            }
         }
         
         // draw text
@@ -446,7 +456,7 @@ public class Beast extends JPanel implements ActionListener, KeyListener
             player_potentialX = playerX;
             player_potentialY = playerY - CELLSIZE;
             if (player_potentialY < CELLSIZE) {
-            	playerLegalMove = false;
+                playerLegalMove = false;
             }
         }
 
@@ -456,7 +466,7 @@ public class Beast extends JPanel implements ActionListener, KeyListener
             player_potentialX = playerX;
             player_potentialY = playerY + CELLSIZE;
             if (player_potentialY  > CELLSIZE * (boardHeight - 1)) {
-            	playerLegalMove = false;
+                playerLegalMove = false;
             }
         }
 
@@ -465,9 +475,9 @@ public class Beast extends JPanel implements ActionListener, KeyListener
             direction = Direction.RIGHT;
             player_potentialX = playerX + CELLSIZE;
             player_potentialY = playerY;
-        	if (playerX + CELLSIZE > CELLSIZE * boardWidth) {
-        		playerLegalMove = false;
-        	}
+            if (playerX + CELLSIZE > CELLSIZE * boardWidth) {
+                playerLegalMove = false;
+            }
         }
 
         if (keyCode == KeyEvent.VK_LEFT) 
@@ -475,143 +485,148 @@ public class Beast extends JPanel implements ActionListener, KeyListener
             direction = Direction.LEFT;
             player_potentialX = playerX - CELLSIZE;
             player_potentialY = playerY;
-        	if (player_potentialX < CELLSIZE) {
-        		playerLegalMove = false;
-        	}
+            if (player_potentialX < CELLSIZE) {
+                playerLegalMove = false;
+            }
         }
         
-    	for (int i = 0; i < NUM_CONCRETES; ++i) {
-    		if (concreteX[i] == player_potentialX && concreteY[i] == player_potentialY) {
-        		playerLegalMove = false;
-    		}
-    	}
+        for (int i = 0; i < NUM_CONCRETES; ++i) {
+            if (concreteX[i] == player_potentialX && concreteY[i] == player_potentialY) {
+                playerLegalMove = false;
+            }
+        }
         
-    	for (int i = 0; i < NUM_BLOCKS; ++i) {
-    		if (blockX[i] == player_potentialX && blockY[i] == player_potentialY) {
-    			if (direction == Direction.UP) {
-    				Integer y = findNextEmptyPositionY(i, blockX[i], blockY[i] - CELLSIZE);
-    				if (y != null) { blockY[i] = y; } else { playerLegalMove = false; }
-    			}
-    			if (direction == Direction.DOWN) { 
-    				Integer y = findNextEmptyPositionY(i, blockX[i], blockY[i] + CELLSIZE);
-    				if (y != null) { blockY[i] = y; } else { playerLegalMove = false; }
-    			}
-    			if (direction == Direction.LEFT) { 
-    				Integer x = findNextEmptyPositionX(i, blockX[i] - CELLSIZE, blockY[i]);
-    				if (x != null) { blockX[i] = x; } else { playerLegalMove = false; }
-    			}
-    			if (direction == Direction.RIGHT) { 
-    				Integer x = findNextEmptyPositionX(i, blockX[i] + CELLSIZE, blockY[i]);
-    				if (x != null) { blockX[i] = x; } else { playerLegalMove = false; }
-    			}
-    		}
-    	}
-		if (playerLegalMove) {
-    		if (!settingUpLevel) {
-				playerX = player_potentialX;
-				playerY = player_potentialY;
-    		} else {
-    			settingUpLevel = false;
-    		}
-    	}
+        for (int i = 0; i < NUM_BLOCKS; ++i) {
+            if (blockX[i] == player_potentialX && blockY[i] == player_potentialY) {
+                if (direction == Direction.UP) {
+                    Integer y = findNextEmptyPositionY(i, blockX[i], blockY[i] - CELLSIZE);
+                    if (y != null) { blockY[i] = y; } else { playerLegalMove = false; }
+                }
+                if (direction == Direction.DOWN) { 
+                    Integer y = findNextEmptyPositionY(i, blockX[i], blockY[i] + CELLSIZE);
+                    if (y != null) { blockY[i] = y; } else { playerLegalMove = false; }
+                }
+                if (direction == Direction.LEFT) { 
+                    Integer x = findNextEmptyPositionX(i, blockX[i] - CELLSIZE, blockY[i]);
+                    if (x != null) { blockX[i] = x; } else { playerLegalMove = false; }
+                }
+                if (direction == Direction.RIGHT) { 
+                    Integer x = findNextEmptyPositionX(i, blockX[i] + CELLSIZE, blockY[i]);
+                    if (x != null) { blockX[i] = x; } else { playerLegalMove = false; }
+                }
+            }
+        }
+        if (playerLegalMove) {
+            if (!cancelPlayerMovement) {
+                playerX = player_potentialX;
+                playerY = player_potentialY;
+            } else {
+                cancelPlayerMovement = false;
+            }
+        }
     }
     
     private void enemy_killed(int index) {
-		enemy_alive[index] = false;
-		alive_enemies--;
-		score += 2;
-		if (alive_enemies == 0)
-			setup_level();
+        enemy_alive[index] = false;
+        System.out.print("alive_enemies before:"+alive_enemies);
+        alive_enemies--;
+        System.out.println(", after:"+alive_enemies);
+        score += 2;
+        if (alive_enemies == 0) {
+        	System.out.print("setting up level... alive_enemies:"+alive_enemies);
+            setup_level();
+            cancelPlayerMovement = true;
+        }
     }
     
     private Integer findNextEmptyPositionY(int index, int x, int y) {
-    	if (y < CELLSIZE || y > CELLSIZE * (boardHeight - 1)) {
-    		return null;
-    	}
-    	for (int i = 0; i < active_enemies; ++i) {
-    		if (enemyX[i] == x && enemyY[i] == y) {
-    			if (!enemy_alive[i])
-    				continue;
-    			int y_check = 0;
-    			if (direction == Direction.UP) { y_check = y - CELLSIZE; }
-    			if (direction == Direction.DOWN) { y_check = y + CELLSIZE; }
-    	    	if (y_check < CELLSIZE || y_check > CELLSIZE * (boardHeight - 1)) {
-	    			enemy_killed(i);
-	    			return y;    	    		
-    	    	}
-    	    	for (int j = 0; j < active_concretes; ++j) {
-    	    		if (concreteX[j] == x && concreteY[j] == y_check) {
-    	    			enemy_killed(i);
-    	    			return y;
-    	    		}
-    	    	}
-    	    	for (int j = 0; j < NUM_BLOCKS; ++j) {
-    	    		if (blockX[j] == x && blockY[j] == y_check) {
-    	    			enemy_killed(i);
-    	    			return y;
-    	    		}
-    	    	}
-    			return null;
-    		}
-    	}
-    	for (int i = 0; i < active_concretes; ++i) {
-    		if (concreteX[i] == x && concreteY[i] == y) {
-    			return null;
-    		}
-    	}
-    	for (int i = 0; i < NUM_BLOCKS; ++i) {
-    		if (blockX[i] == x && blockY[i] == y && i != index) {
-    			if (direction == Direction.UP)  { y -= CELLSIZE; }
-    			if (direction == Direction.DOWN) { y += CELLSIZE; }
-    			return findNextEmptyPositionY(index, x, y);
-    		}
-    	}
-    	return y;
+        if (y < CELLSIZE || y > CELLSIZE * (boardHeight - 1)) {
+            return null;
+        }
+        for (int i = 0; i < active_enemies; ++i) {
+            if (enemyX[i] == x && enemyY[i] == y) {
+                if (!enemy_alive[i])
+                    continue;
+                int y_check = 0;
+                if (direction == Direction.UP) { y_check = y - CELLSIZE; }
+                if (direction == Direction.DOWN) { y_check = y + CELLSIZE; }
+                if (y_check < CELLSIZE || y_check > CELLSIZE * (boardHeight - 1)) {
+                    enemy_killed(i);
+                    return y;                   
+                }
+                for (int j = 0; j < active_concretes; ++j) {
+                    if (concreteX[j] == x && concreteY[j] == y_check) {
+                        enemy_killed(i);
+                        return y;
+                    }
+                }
+                for (int j = 0; j < NUM_BLOCKS; ++j) {
+                    if (blockX[j] == x && blockY[j] == y_check) {
+                        enemy_killed(i);
+                        return y;
+                    }
+                }
+                return null;
+            }
+        }
+        for (int i = 0; i < active_concretes; ++i) {
+            if (concreteX[i] == x && concreteY[i] == y) {
+                return null;
+            }
+        }
+        for (int i = 0; i < NUM_BLOCKS; ++i) {
+            if (blockX[i] == x && blockY[i] == y && i != index) {
+                if (direction == Direction.UP)  { y -= CELLSIZE; }
+                if (direction == Direction.DOWN) { y += CELLSIZE; }
+                return findNextEmptyPositionY(index, x, y);
+            }
+        }
+        return y;
     }
     
     private Integer findNextEmptyPositionX(int index, int x, int y) {
-    	if (x < CELLSIZE || x > CELLSIZE * boardWidth) {
-    		return null;
-    	}
-    	for (int i = 0; i < active_enemies; ++i) {
-    		if (enemyX[i] == x && enemyY[i] == y) {
-    			if (!enemy_alive[i])
-    				continue;
-    			int x_check = 0;
-    			if (direction == Direction.LEFT) { x_check = x - CELLSIZE; }
-    			if (direction == Direction.RIGHT) { x_check = x + CELLSIZE; }
-    	    	if (x_check < CELLSIZE || x_check > CELLSIZE * boardWidth) {
-	    			enemy_killed(i);
-	    			return x;    	    		
-    	    	}
-    	    	for (int j = 0; j < active_concretes; ++j) {
-    	    		if (concreteX[j] == x_check && concreteY[j] == y) {
-    	    			enemy_killed(i);
-    	    			return x;
-    	    		}
-    	    	}
-    	    	for (int j = 0; j < NUM_BLOCKS; ++j) {
-    	    		if (blockX[j] == x_check && blockY[j] == y) {
-    	    			enemy_killed(i);
-    	    			return x;
-    	    		}
-    	    	}
-    			return null;
-    		}
-    	}
-    	for (int i = 0; i < active_concretes; ++i) {
-    		if (concreteX[i] == x && concreteY[i] == y) {
-    			return null;
-    		}
-    	}
-    	for (int i = 0; i < NUM_BLOCKS; ++i) {
-    		if (blockX[i] == x && blockY[i] == y && i != index) {
-    			if (direction == Direction.LEFT)  { x -= CELLSIZE; }
-    			if (direction == Direction.RIGHT) { x += CELLSIZE; }
-    			return findNextEmptyPositionX(index, x, y);
-    		}
-    	}
-    	return x;
+        if (x < CELLSIZE || x > CELLSIZE * boardWidth) {
+            return null;
+        }
+        for (int i = 0; i < active_enemies; ++i) {
+            if (enemyX[i] == x && enemyY[i] == y) {
+                if (!enemy_alive[i])
+                    continue;
+                int x_check = 0;
+                if (direction == Direction.LEFT) { x_check = x - CELLSIZE; }
+                if (direction == Direction.RIGHT) { x_check = x + CELLSIZE; }
+                if (x_check < CELLSIZE || x_check > CELLSIZE * boardWidth) {
+                    enemy_killed(i);
+                    return x;                   
+                }
+                for (int j = 0; j < active_concretes; ++j) {
+                    if (concreteX[j] == x_check && concreteY[j] == y) {
+                        enemy_killed(i);
+                        return x;
+                    }
+                }
+                for (int j = 0; j < NUM_BLOCKS; ++j) {
+                    if (blockX[j] == x_check && blockY[j] == y) {
+                        enemy_killed(i);
+                        return x;
+                    }
+                }
+                return null;
+            }
+        }
+        for (int i = 0; i < active_concretes; ++i) {
+            if (concreteX[i] == x && concreteY[i] == y) {
+                return null;
+            }
+        }
+        for (int i = 0; i < NUM_BLOCKS; ++i) {
+            if (blockX[i] == x && blockY[i] == y && i != index) {
+                if (direction == Direction.LEFT)  { x -= CELLSIZE; }
+                if (direction == Direction.RIGHT) { x += CELLSIZE; }
+                return findNextEmptyPositionX(index, x, y);
+            }
+        }
+        return x;
     }
 
     public void keyTyped(KeyEvent e) {}
